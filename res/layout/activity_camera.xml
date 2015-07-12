@@ -1,0 +1,43 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    tools:context="${relativePackage}.${activityClass}" >
+
+    <FrameLayout 
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true" >
+        
+        <SurfaceView android:id="@+id/camera_preview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />  
+         
+        <SurfaceView android:id="@+id/rect_surfaceview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />     
+    </FrameLayout>
+    
+	<RelativeLayout 
+	    android:layout_width="wrap_content"
+	    android:layout_height="wrap_content"
+	    android:layout_alignParentBottom="true"
+	    android:layout_centerHorizontal="true" >
+
+	    <Button
+	        android:id="@+id/bt_cam"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:text="Capture" />
+
+	    <Button
+	        android:id="@+id/bt_gallery"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_toRightOf="@id/bt_cam"
+	        android:text="Gallery" />
+
+	</RelativeLayout>
+    
+
+</RelativeLayout>

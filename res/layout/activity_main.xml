@@ -1,0 +1,123 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity" >
+    
+    <TextView android:id="@+id/title1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:textSize="25sp"
+        android:textColor="#0000FF"
+        android:text="Image collection"/>
+
+    <LinearLayout
+        android:id="@+id/ll1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title1"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/bt_capture"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"   
+            android:layout_weight="1"
+            android:textSize="20sp"
+            android:text="Capture" />
+
+        <Button
+            android:id="@+id/bt_upload"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"           
+            android:layout_weight="1"
+            android:textSize="20sp"
+            android:text="Upload" />
+    </LinearLayout>
+    
+    <TextView android:id="@+id/title2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll1"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:textSize="25sp"
+        android:textColor="#0000FF"
+        android:text="Image processing"/>
+    
+    <LinearLayout
+        android:id="@+id/ll2"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title2"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/bt_sift"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"   
+            android:layout_weight="1"
+            android:textSize="20sp"
+            android:text="SIFT" />
+
+        <Button
+            android:id="@+id/bt_match"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"           
+            android:layout_weight="1"
+            android:textSize="20sp"
+            android:text="Match" />
+    </LinearLayout>
+    
+    <TextView android:id="@+id/title3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ll2"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:textSize="25sp"
+        android:textColor="#0000FF"
+        android:text="MCC cooperation"/>
+    
+    <Button
+        android:id="@+id/bt_mcc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/title3"
+        android:layout_marginLeft="15dp"
+        android:layout_marginRight="15dp"
+        android:textSize="20sp"
+        android:text="MCC" />
+    
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/bt_mcc"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginBottom="10dp" >
+
+        <TextView
+            android:id="@+id/textview_message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="null"
+            android:textSize="15sp" />
+    </ScrollView>
+    
+    <ProgressBar android:id="@+id/progressBar"
+        android:layout_width="match_parent"
+        android:layout_height="10dp"
+        android:layout_centerHorizontal="true"
+        android:layout_alignParentTop="true"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:max="100" />
+
+</RelativeLayout>

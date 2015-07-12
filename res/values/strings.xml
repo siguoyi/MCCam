@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">MCCam</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_camera">CameraActivity</string>
+    <string name="exit">Are you sure?</string>
+    <string name="title_activity_image_pick">ImagePickActivity</string>
+
+</resources>
