@@ -1,7 +1,6 @@
 package edu.bupt.camera;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -23,6 +22,7 @@ import android.graphics.PorterDuff.Mode;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
 import android.hardware.Camera.PictureCallback;
+import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
 import android.net.Uri;
@@ -96,7 +96,11 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			if(success) {
 				Log.d("AutoFocus", "success!");
 				if(!onTouchFocus) {
-					camera.takePicture(null, null, mPicture);	
+					try {
+						camera.takePicture(null, null, mPicture);	
+					} catch(Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}else {
 				Log.d("AutoFocus", "failed!");
@@ -163,43 +167,47 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 		return dm;
 	}
 	
-	private class SaveImageTask extends AsyncTask<byte[], Void, Void> {
-		File picFile;
+	private class SaveImageTask extends AsyncTask<byte[], Void, File> {
 		@Override
-		protected Void doInBackground(byte[]... params) {
-			picFile = getOutputMediaFile(MEDIA_TYPE_IMAGE);
-			if(picFile == null){
+		protected File doInBackground(byte[]... params) {
+			return saveImage(params[0]);
+		}
+		
+		@Override
+		protected void onPostExecute(File result) {
+			Toast.makeText(getApplicationContext(), "Picture saved", Toast.LENGTH_LONG).show();
+			newFile = result;
+			if (newFile != null){
+				refreshGallery(newFile);
+			}
+		}
+		
+		private File saveImage(byte[] data) {
+			File file = getOutputMediaFile(MEDIA_TYPE_IMAGE);
+			if(file == null){
 				Log.d("pictureCallback", "Error creating media file, check storage permission");
 				return null;
 			}
-			Bitmap img = rotateImage(params[0], rotationDegrees);
+			//Bitmap img = rotateImage(params[0], rotationDegrees);
 			FileOutputStream fos;
 			try {
-				fos = new FileOutputStream(picFile);
-				img.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+				fos = new FileOutputStream(file);
+				//img.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+				fos.write(data);
 				fos.flush();
 				fos.close();
-				if (!img.isRecycled()){
-					img.recycle();
-					img = null;
-					System.gc();
-				}
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
+				ExifInterface exif = new ExifInterface(file.getAbsolutePath());
+				Log.d("orientation", " " + exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+				exif.setAttribute(ExifInterface.TAG_ORIENTATION, "" + ExifInterface.ORIENTATION_ROTATE_90);
+				exif.saveAttributes();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			return null;
-		}
-
-		@Override
-		protected void onPostExecute(Void result) {
-			Toast.makeText(getApplicationContext(), "Picture saved", Toast.LENGTH_LONG).show();
-			newFile = picFile;
-			refreshGallery(picFile);
+			return file;
 		}
 	}
 	
+	/*this rotation method will cause EXIF header loss*/
 	private static Bitmap rotateImage(byte[] data, float degrees) {
 		Bitmap src, dst;
 		synchronized(data){
@@ -224,7 +232,6 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				return null;
 			}
 		}
-		
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 		File mediaFile;
 		if(type == MEDIA_TYPE_IMAGE){
@@ -263,36 +270,41 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			mCamera.autoFocus(mAFCallback);
 			break;
 		case R.id.bt_gallery:
-			String s = newFile != null ? newFile.getAbsolutePath() : 
-				mediaStorageDir.getAbsolutePath() + "/" + mediaStorageDir.list()[0];
+			String s = (newFile != null) ? newFile.getAbsolutePath() : 
+				(mediaStorageDir.list().length == 0) ? null : 
+					mediaStorageDir.getAbsolutePath() + "/" + mediaStorageDir.list()[0];
 			Log.d("scanPath", " " + s);
-			scanImages(s);
+			if (s != null) {
+				scanImages(s);
+			} else {
+				Toast.makeText(getApplicationContext(), "Nothing", Toast.LENGTH_LONG).show();
+			}
 			break;
 		}
 	}
 	
 	private void scanImages(final String scanPath) {
 		conn = new MediaScannerConnection(this, 
-				new MediaScannerConnectionClient() {
-					@Override
-					public void onScanCompleted(String path, Uri uri) {
-						try {
-							if (uri != null) {
-								Intent intent = new Intent();
-								intent.setAction(Intent.ACTION_VIEW);
-								intent.setDataAndType(uri, "image/jpeg");
-								startActivity(intent);
-							}
-						} finally {
-							conn.disconnect();
-							conn = null;
+			new MediaScannerConnectionClient() {
+				@Override
+				public void onScanCompleted(String path, Uri uri) {
+					try {
+						if (uri != null) {
+							Intent intent = new Intent();
+							intent.setAction(Intent.ACTION_VIEW);
+							intent.setDataAndType(uri, "image/jpeg");
+							startActivity(intent);
 						}
+					} finally {
+						conn.disconnect();
+						conn = null;
 					}
-					@Override
-					public void onMediaScannerConnected() {
-						conn.scanFile(scanPath, "image/jpeg");
-					}
-				});
+				}
+				@Override
+				public void onMediaScannerConnected() {
+					conn.scanFile(scanPath, "image/jpeg");
+				}
+			});
 
 		conn.connect();
 	}
@@ -328,30 +340,21 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 	}
 
 	@Override
-	public void surfaceChanged(SurfaceHolder holder, int format, int width,
-			int height) {
-		Log.d("surfaceChanges", "holder = " + holder);
-		// If your preview can change or rotate, take care of those events here.
-		// Make sure to stop the preview before resizing or reformatting it.
+	public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
 		if(holder.getSurface() == null){
 			return;
-		}
-		// stop preview before making changes
+		}	
 		try {
+			// stop preview before making changes
 			mCamera.stopPreview();
-		}catch(Exception e){
 			
-		}
-		// set preview size and make any resize, rotate or
-		// reformatting changes here
-		// start preview with new settings
-		try {
 			mCamera.setPreviewDisplay(holder);
 			setCameraParameters();
 			setCameraDisplayOrientation(this, 0, mCamera);
+			
 			mCamera.startPreview();
 		}catch(Exception e) {
-			Log.d("surfaceChanged", "error starting camera preview" + e.getMessage());
+			Log.d("surfaceChanged", e.getMessage());
 		}
 	}
 
@@ -391,7 +394,6 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 	private void setCameraParameters(){
 		if (mCamera != null){
 			Camera.Parameters params = mCamera.getParameters();
-			
 			List<String> focusModes = params.getSupportedFocusModes();
 			for (String s:focusModes){
 				Log.d("FocusMode", s);
@@ -468,7 +470,6 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 		return optimalSize;
 	}
 	
-
 	@Override
 	protected void onPause() {
 		releaseCamera();
