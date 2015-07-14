@@ -6,10 +6,8 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-
 import edu.bupt.mccam.R;
 import android.app.Activity;
-import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -29,7 +27,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.provider.MediaStore;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -175,10 +172,18 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 		
 		@Override
 		protected void onPostExecute(File result) {
-			Toast.makeText(getApplicationContext(), "Picture saved", Toast.LENGTH_LONG).show();
-			newFile = result;
-			if (newFile != null){
-				refreshGallery(newFile);
+			if (result != null) {
+				try {
+					ExifInterface exif = new ExifInterface(result.getAbsolutePath());
+					Log.d("orientation", " " + exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+					exif.setAttribute(ExifInterface.TAG_ORIENTATION, "" + ExifInterface.ORIENTATION_ROTATE_90);
+					exif.saveAttributes();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				Toast.makeText(getApplicationContext(), "Picture saved", Toast.LENGTH_LONG).show();
+				newFile = result;
+				scanImages(result.getAbsolutePath(), false);
 			}
 		}
 		
@@ -188,6 +193,7 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				Log.d("pictureCallback", "Error creating media file, check storage permission");
 				return null;
 			}
+			Log.d("FileName", " " + file.getName());
 			//Bitmap img = rotateImage(params[0], rotationDegrees);
 			FileOutputStream fos;
 			try {
@@ -196,10 +202,6 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				fos.write(data);
 				fos.flush();
 				fos.close();
-				ExifInterface exif = new ExifInterface(file.getAbsolutePath());
-				Log.d("orientation", " " + exif.getAttribute(ExifInterface.TAG_ORIENTATION));
-				exif.setAttribute(ExifInterface.TAG_ORIENTATION, "" + ExifInterface.ORIENTATION_ROTATE_90);
-				exif.saveAttributes();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -210,17 +212,15 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 	/*this rotation method will cause EXIF header loss*/
 	private static Bitmap rotateImage(byte[] data, float degrees) {
 		Bitmap src, dst;
-		synchronized(data){
-			src = BitmapFactory.decodeByteArray(data, 0, data.length);
-			Matrix m = new Matrix();
-			m.reset();
-			m.postRotate(degrees);
-			dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, true);
-			if (!src.isRecycled()){
-				src.recycle();
-				src = null;
-				System.gc();
-			}
+		src = BitmapFactory.decodeByteArray(data, 0, data.length);
+		Matrix m = new Matrix();
+		m.reset();
+		m.postRotate(degrees);
+		dst = Bitmap.createBitmap(src, 0, 0, src.getWidth(), src.getHeight(), m, true);
+		if (!src.isRecycled()){
+			src.recycle();
+			src = null;
+			System.gc();
 		}
 		return dst;
 	}
@@ -270,12 +270,13 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			mCamera.autoFocus(mAFCallback);
 			break;
 		case R.id.bt_gallery:
-			String s = (newFile != null) ? newFile.getAbsolutePath() : 
-				(mediaStorageDir.list().length == 0) ? null : 
-					mediaStorageDir.getAbsolutePath() + "/" + mediaStorageDir.list()[0];
+			String[] filelist = mediaStorageDir.list();
+			String s = (newFile != null) ? 
+				newFile.getAbsolutePath() : (filelist.length == 0) ?
+					null : mediaStorageDir.getAbsolutePath() + "/" + filelist[filelist.length-1];
 			Log.d("scanPath", " " + s);
 			if (s != null) {
-				scanImages(s);
+				scanImages(s, true);
 			} else {
 				Toast.makeText(getApplicationContext(), "Nothing", Toast.LENGTH_LONG).show();
 			}
@@ -283,13 +284,13 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 		}
 	}
 	
-	private void scanImages(final String scanPath) {
+	private void scanImages(final String scanPath, final boolean open) {
 		conn = new MediaScannerConnection(this, 
 			new MediaScannerConnectionClient() {
 				@Override
 				public void onScanCompleted(String path, Uri uri) {
 					try {
-						if (uri != null) {
+						if (uri != null && open) {
 							Intent intent = new Intent();
 							intent.setAction(Intent.ACTION_VIEW);
 							intent.setDataAndType(uri, "image/jpeg");
@@ -307,13 +308,6 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			});
 
 		conn.connect();
-	}
-	
-	private void refreshGallery(File file) {
-		ContentValues values = new ContentValues();
-		values.put(MediaStore.Images.Media.DATA, file.getAbsolutePath());
-		values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-		getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
 	}
 	
 	@Override
