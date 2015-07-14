@@ -121,7 +121,7 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 		
 		mCamera = getCameraInstance();
 		// Install a SurfaceHolder.Callback so we get notified when the
-       // underlying surface is created and destroyed.
+		// underlying surface is created and destroyed.
 		mHolder = cameraSurfaceView.getHolder();
 		mHolder.addCallback(this);
 		// deprecated setting, but required on Android versions prior to 3.0
@@ -303,10 +303,14 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				}
 				@Override
 				public void onMediaScannerConnected() {
-					conn.scanFile(scanPath, "image/jpeg");
+					try {
+						conn.scanFile(scanPath, "image/jpeg");
+					}catch(Exception e) {
+						e.printStackTrace();
+					}
 				}
 			});
-
+		
 		conn.connect();
 	}
 	
