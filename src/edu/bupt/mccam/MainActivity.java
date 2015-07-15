@@ -11,6 +11,7 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -23,6 +24,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	private static final int SELECT_IMAGES = 1;
 	private String serverIp = null;
+	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
+			Environment.DIRECTORY_PICTURES), "MCCam");
 	
 	private Button bt_capture;
 	private Button bt_upload;
@@ -50,7 +53,13 @@ public class MainActivity extends Activity implements OnClickListener {
 			startActivity(camIntent);
 			break;		
 		case R.id.bt_upload:
-			InputServerAddress();
+			if(mediaStorageDir.exists()) {
+				if (mediaStorageDir.list().length > 0) {
+					InputServerAddress();
+					break;
+				}
+			} 
+			Toast.makeText(getApplicationContext(), "Nothing", Toast.LENGTH_LONG).show();
 			break;
 		default: break;
 		}
@@ -102,10 +111,10 @@ public class MainActivity extends Activity implements OnClickListener {
 					}
 					progressBar.setVisibility(ProgressBar.VISIBLE);
 					new MyUploadHelper(serverIp).execute(files);
-				} else {
-					Toast.makeText(getApplicationContext(), "Nothing to do", Toast.LENGTH_LONG).show();
+					break;
 				}
-			}
+			} 
+			Toast.makeText(getApplicationContext(), "Nothing to do", Toast.LENGTH_LONG).show();
 			break;
 		}
 	}

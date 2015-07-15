@@ -10,11 +10,14 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.GridView;
 import android.widget.ImageView;
 
@@ -71,6 +74,37 @@ public class ImagePickActivity extends Activity implements OnClickListener {
 		getImages();
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		this.getMenuInflater().inflate(R.menu.image_pick_menu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch(item.getItemId()) {
+		case R.id.select_all:
+			boolean flag = item.getTitle().equals("Select all");
+			if(mImgGrid != null && imageAdapter != null) {
+				for(int i=0;i<mImgGrid.getCount();i++){
+					CheckBox cb = (CheckBox) mImgGrid.findViewWithTag(i);
+					if(cb != null) {
+						if(flag) {
+							cb.setChecked(true);
+							imageAdapter.setCheck(i, true);
+						} else {
+							cb.setChecked(false);
+							imageAdapter.setCheck(i, false);
+						}
+					}
+				}
+				item.setTitle(flag ? "De-select all" : "Select all");
+			}
+			break;
+		}
+		return super.onOptionsItemSelected(item);
+	}
+
 	private void getImages(){
 		File[] files = mediaStorageDir.listFiles(new FilenameFilter(){
 			@Override
@@ -95,8 +129,10 @@ public class ImagePickActivity extends Activity implements OnClickListener {
 		Intent imagePicked = new Intent();
 		if(paths != null){
 			imagePicked.putStringArrayListExtra("IMAGE_PATHS", paths);
+			setResult(RESULT_OK, imagePicked);
+		} else {
+			setResult(RESULT_CANCELED);
 		}
-		setResult(RESULT_OK, imagePicked);
 		finish();
 	}
 

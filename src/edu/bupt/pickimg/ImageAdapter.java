@@ -53,6 +53,7 @@ public class ImageAdapter extends BaseAdapter {
 		}
 		viewHolder.position = position;
 		viewHolder.imageView.setTag("img" + position);;
+		viewHolder.checkBox.setTag(position);
 		viewHolder.checkBox.setId(position);
 		viewHolder.checkBox.setChecked(data.get(position).isChecked);
 		viewHolder.checkBox.setOnClickListener(new OnClickListener(){
@@ -88,12 +89,27 @@ public class ImageAdapter extends BaseAdapter {
 		}
 	}
 	
+	public void setCheck(int position, boolean check) {
+		if(position < data.size()){
+			data.get(position).isChecked = check;
+		}
+	}
+
 	public void selectAll(){
 		if(!data.isEmpty()) {
 			for(ThumbImage ti:data){
 				ti.isChecked = true;
 			}
-			notifyDataSetChanged();
+			//notifyDataSetChanged();
+		}
+	}
+	
+	public void deSelectAll(){
+		if(!data.isEmpty()) {
+			for(ThumbImage ti:data){
+				ti.isChecked = false;
+			}
+			//notifyDataSetChanged();
 		}
 	}
 	
