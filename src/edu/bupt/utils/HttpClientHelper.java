@@ -19,6 +19,7 @@ public class HttpClientHelper extends AsyncTask<String,String,String>{
 	
 	public String get(String url) {
 		String result = "";
+		String lastLine = "";
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpGet httpRequest = new HttpGet(url);
 		InputStream is = null;
@@ -31,26 +32,43 @@ public class HttpClientHelper extends AsyncTask<String,String,String>{
 				String line = "";
 				while((line=reader.readLine())!=null) {
 					builder.append(line + "\n");
-					publishProgress(line + "\n");
+					lastLine = line;
 				}
 				is.close();
 				result = builder.toString();
 			} else {
 				result = "Request error!";
 			}
+			publishProgress(result);
 			httpClient.getConnectionManager().shutdown();
 		} catch (ClientProtocolException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return result;
+		return lastLine;
 	}
 
 	@Override
 	protected String doInBackground(String... params) {
+		String lastLine = "";
 		Log.d("get request", "running");
-		return get(params[0]);
+		if (params[0].contains("loglog")) {
+			while(true) {
+				try {
+					Thread.sleep(3000);
+					lastLine = get(params[0]);
+					if (lastLine.contains("okokokokok")) {
+						break;
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		} else {
+			lastLine = get(params[0]);
+		}
+		return lastLine;
 	}
 
 	@Override

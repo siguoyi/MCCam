@@ -27,7 +27,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	private static final int SELECT_IMAGES = 1;
 	private String serverIp = null;
-	private String server_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
+	private String server_url_reconstruction = "http://10.105.32.59/reconstruction.php?peak_threshold=";
+	private String server_url_log = "http://10.105.32.59/loglog.php";
 	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 			Environment.DIRECTORY_PICTURES), "MCCam");
 	
@@ -65,6 +66,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			if(mediaStorageDir.exists()) {
 				if (mediaStorageDir.list().length > 0) {
 					InputServerAddress();
+					bt_upload.setEnabled(true);
 					break;
 				}
 			} 
@@ -87,7 +89,8 @@ public class MainActivity extends Activity implements OnClickListener {
 					String s = et.getText().toString();
 					String value = s.equals("") ? "10" : s;				
 					Log.d("InputValue", " " + value);
-					new MyHttpClientTask().execute(server_url + value);
+					new MyHttpClientTask().execute(server_url_reconstruction + value);
+					new MyHttpClientTask().execute(server_url_log);
 				}
 			}).show();
 	}
@@ -174,16 +177,14 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 	
 	private class MyHttpClientTask extends HttpClientHelper {
-		StringBuilder builder = new StringBuilder();
 		@Override
 		public void updateProgress(String values) {
-			builder.append(values);
-			tv_message.setText(builder.toString());
+			tv_message.setText(values);
 		}
 
 		@Override
 		public void onFinished() {
-			Toast.makeText(getApplicationContext(), "Finished reconstruction", Toast.LENGTH_LONG).show();	
+			Toast.makeText(getApplicationContext(), "Running reconstruction", Toast.LENGTH_LONG).show();	
 		}
 	}
 
