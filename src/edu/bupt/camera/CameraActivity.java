@@ -139,7 +139,7 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 		try {
 			c = Camera.open();
 		}catch(Exception e){
-			
+			Log.d("OpenCamera", "failed");
 		}
 		return c;
 	}

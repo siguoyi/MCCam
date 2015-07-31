@@ -20,7 +20,7 @@ import android.util.Log;
 
 public class UploadHelper extends AsyncTask<File[], Integer, Object> {
 
-	public static final String DEFAULT_UPLOAD_URL="http://10.105.37.224/save_file.php";
+	public static final String DEFAULT_UPLOAD_URL="http://10.105.32.59/save_file.php";
 	public String user_upload_url;
 	
 	public UploadHelper(String addr) {
