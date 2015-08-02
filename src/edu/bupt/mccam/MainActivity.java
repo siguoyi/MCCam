@@ -12,6 +12,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
@@ -63,16 +64,18 @@ public class MainActivity extends Activity implements OnClickListener {
 			startActivity(camIntent);
 			break;		
 		case R.id.bt_upload:
+			bt_upload.setEnabled(false);
 			if(mediaStorageDir.exists()) {
 				if (mediaStorageDir.list().length > 0) {
 					InputServerAddress();
-					bt_upload.setEnabled(true);
 					break;
 				}
-			} 
+			}
+			bt_upload.setEnabled(true);
 			Toast.makeText(getApplicationContext(), "Nothing", Toast.LENGTH_LONG).show();
 			break;
 		case R.id.bt_reconstruction:
+			bt_reconstruction.setEnabled(false);
 			InputPeakThreshold();
 		default: break;
 		}
@@ -82,15 +85,15 @@ public class MainActivity extends Activity implements OnClickListener {
 		tv_message.setText("");
 		final EditText et = new EditText(this);
 		et.setHint("10");
-		new MyAlertDialog(this,et,"Input peak threshold",
+		new MyAlertDialog(this,et,"Input peak threshold",bt_reconstruction,
 			new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					String s = et.getText().toString();
 					String value = s.equals("") ? "10" : s;				
 					Log.d("InputValue", " " + value);
-					new MyHttpClientTask().execute(server_url_reconstruction + value);
-					new MyHttpClientTask().execute(server_url_log);
+					new MyHttpClientTask().execute(server_url_reconstruction + value,
+							server_url_log);
 				}
 			}).show();
 	}
@@ -98,7 +101,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void InputServerAddress() {
 		final EditText et = new EditText(this);
 		et.setHint("10.105.32.59");
-		new MyAlertDialog(this,et,"Input server address",
+		new MyAlertDialog(this,et,"Input server address",bt_upload,
 			new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
@@ -112,8 +115,11 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	private class MyAlertDialog {
 		AlertDialog.Builder dialog;
-		protected MyAlertDialog(Context context, EditText et, String title, 
+		Button bt_triger;
+		
+		protected MyAlertDialog(Context context, EditText et, String title, Button bt,
 				DialogInterface.OnClickListener okListener) {
+			bt_triger = bt;
 			dialog = new AlertDialog.Builder(context)
 				.setTitle(title)
 				.setView(et)
@@ -123,6 +129,7 @@ public class MainActivity extends Activity implements OnClickListener {
 						@Override
 						public void onClick(DialogInterface dialog,
 								int which) {
+							bt_triger.setEnabled(true);
 						}
 					});
 		}
@@ -141,6 +148,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		super.onActivityResult(requestCode, resultCode, data);
 		switch(requestCode){
 		case SELECT_IMAGES:
+			bt_upload.setEnabled(true);
 			if(resultCode == RESULT_OK){
 				ArrayList<String> paths = data.getStringArrayListExtra("IMAGE_PATHS");
 				if(!paths.isEmpty()) {
@@ -149,7 +157,8 @@ public class MainActivity extends Activity implements OnClickListener {
 						files[i] = new File(paths.get(i));
 					}
 					progressBar.setVisibility(ProgressBar.VISIBLE);
-					new MyUploadHelper(serverIp).execute(files);
+					//new MyUploadHelper(serverIp).execute(files);
+					new MyUploadHelper(serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
 					break;
 				}
 			} 
@@ -184,7 +193,8 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		@Override
 		public void onFinished() {
-			Toast.makeText(getApplicationContext(), "Running reconstruction", Toast.LENGTH_LONG).show();	
+			bt_reconstruction.setEnabled(true);
+			Toast.makeText(getApplicationContext(), "finished reconstruction", Toast.LENGTH_LONG).show();	
 		}
 	}
 

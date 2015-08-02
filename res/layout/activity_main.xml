@@ -7,9 +7,9 @@
     <TextView android:id="@+id/title1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="5dp"
         android:layout_marginLeft="10dp"
-        android:textSize="25sp"
+        android:textSize="22sp"
         android:textColor="#0000FF"
         android:text="Image collection"/>
 
@@ -43,9 +43,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/ll1"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="5dp"
         android:layout_marginLeft="10dp"
-        android:textSize="25sp"
+        android:textSize="22sp"
         android:textColor="#0000FF"
         android:text="Image processing"/>
     
@@ -91,9 +91,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@id/ll2"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="5dp"
         android:layout_marginLeft="10dp"
-        android:textSize="25sp"
+        android:textSize="22sp"
         android:textColor="#0000FF"
         android:text="MCC cooperation"/>
     

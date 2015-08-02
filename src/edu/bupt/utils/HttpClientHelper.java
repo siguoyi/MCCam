@@ -18,8 +18,8 @@ import android.util.Log;
 public class HttpClientHelper extends AsyncTask<String,String,String>{
 	
 	public String get(String url) {
-		String result = "";
-		String lastLine = "";
+		String result = " ";
+		String lastLine = " ";
 		HttpClient httpClient = new DefaultHttpClient();
 		HttpGet httpRequest = new HttpGet(url);
 		InputStream is = null;
@@ -51,13 +51,14 @@ public class HttpClientHelper extends AsyncTask<String,String,String>{
 
 	@Override
 	protected String doInBackground(String... params) {
-		String lastLine = "";
-		Log.d("get request", "running");
-		if (params[0].contains("loglog")) {
+		Log.d("get request", "reconstruction.php");
+		String lastLine = get(params[0]);
+		Log.d("get request", "loglog.php");
+		if(lastLine.equals("fileok")) {
 			while(true) {
 				try {
 					Thread.sleep(3000);
-					lastLine = get(params[0]);
+					lastLine = get(params[1]);
 					if (lastLine.contains("okokokokok")) {
 						break;
 					}
@@ -65,8 +66,6 @@ public class HttpClientHelper extends AsyncTask<String,String,String>{
 					e.printStackTrace();
 				}
 			}
-		} else {
-			lastLine = get(params[0]);
 		}
 		return lastLine;
 	}
