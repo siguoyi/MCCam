@@ -27,7 +27,7 @@ import android.widget.Toast;
 public class MainActivity extends Activity implements OnClickListener {
 	
 	private static final int SELECT_IMAGES = 1;
-	private String serverIp = null;
+	private String serverIp = "http://10.105.32.59/save_file.php";
 	private String server_url_reconstruction = "http://10.105.32.59/reconstruction.php?peak_threshold=";
 	private String server_url_log = "http://10.105.32.59/loglog.php";
 	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
@@ -98,15 +98,28 @@ public class MainActivity extends Activity implements OnClickListener {
 			}).show();
 	}
 	
+	private void updateServerAddr(String ip) {
+		if (!ip.equals("")){
+			serverIp = "http://" + ip + "/save_file.php";
+			server_url_reconstruction = "http://" + ip + "/reconstruction.php?peak_threshold=";
+			server_url_log = "http://" + ip + "/loglog.php";
+		} else {
+			serverIp = "http://10.105.32.59/save_file.php";
+			server_url_reconstruction = "http://10.105.32.59/reconstruction.php?peak_threshold=";
+			server_url_log = "http://10.105.32.59/loglog.php";
+		}
+		
+	}
+	
 	private void InputServerAddress() {
 		final EditText et = new EditText(this);
-		et.setHint("10.105.32.59");
+		et.setHint("10.105.32.59:80");
 		new MyAlertDialog(this,et,"Input server address",bt_upload,
 			new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
 					String s = et.getText().toString();
-					serverIp = s.equals("") ? null : "http://" + s + "/save_file.php";				
+					updateServerAddr(s);
 					Log.d("InputAddress", " " + serverIp);
 					picImage();
 				}
