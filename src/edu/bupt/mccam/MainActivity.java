@@ -136,6 +136,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			dialog = new AlertDialog.Builder(context)
 				.setTitle(title)
 				.setView(et)
+				.setCancelable(false)
 				.setPositiveButton(android.R.string.ok, okListener)
 				.setNegativeButton(android.R.string.cancel,
 					new DialogInterface.OnClickListener() {
