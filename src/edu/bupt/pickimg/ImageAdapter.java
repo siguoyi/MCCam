@@ -32,6 +32,10 @@ public class ImageAdapter extends BaseAdapter {
 	public Object getItem(int position) {
 		return data.get(position);
 	}
+	
+	public boolean getCheckBoxStatus(int position) {
+		return data.get(position).isChecked;
+	}
 
 	@Override
 	public long getItemId(int position) {

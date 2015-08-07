@@ -57,9 +57,10 @@ public class ImagePickActivity extends Activity implements OnClickListener {
 				switch(scrollState){
 				case OnScrollListener.SCROLL_STATE_IDLE:
 					for(;startIndex<endIndex;startIndex++){
-						ImageView iv = (ImageView) mImgGrid.findViewWithTag("img" + startIndex);
-						if(iv != null){
-							//Log.d("FindImageView", "success");
+						//ImageView iv = (ImageView) mImgGrid.findViewWithTag("img" + startIndex);
+						CheckBox cb = (CheckBox) mImgGrid.findViewWithTag(startIndex);
+						if(cb != null){
+							cb.setChecked(imageAdapter.getCheckBoxStatus(startIndex));
 						}
 					}
 					break;
@@ -86,16 +87,16 @@ public class ImagePickActivity extends Activity implements OnClickListener {
 		case R.id.select_all:
 			boolean flag = item.getTitle().equals("Select all");
 			if(mImgGrid != null && imageAdapter != null) {
+				if(flag) {
+					imageAdapter.selectAll();
+				}else {
+					imageAdapter.deSelectAll();
+				}
 				for(int i=0;i<mImgGrid.getCount();i++){
 					CheckBox cb = (CheckBox) mImgGrid.findViewWithTag(i);
 					if(cb != null) {
-						if(flag) {
-							cb.setChecked(true);
-							imageAdapter.setCheck(i, true);
-						} else {
-							cb.setChecked(false);
-							imageAdapter.setCheck(i, false);
-						}
+						cb.setChecked(flag);
+						//imageAdapter.setCheck(i, flag);
 					}
 				}
 				item.setTitle(flag ? "De-select all" : "Select all");
