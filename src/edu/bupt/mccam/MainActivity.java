@@ -2,6 +2,8 @@ package edu.bupt.mccam;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import edu.bupt.camera.CameraActivity;
 import edu.bupt.pickimg.ImagePickActivity;
@@ -12,12 +14,17 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnFocusChangeListener;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -39,6 +46,9 @@ public class MainActivity extends Activity implements OnClickListener {
 	private Button bt_reconstruction;
 	private TextView tv_message;
 	private ProgressBar progressBar;
+	private AutoCompleteTextView tv_auto;
+	
+	private SharedPreferences sp;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +65,35 @@ public class MainActivity extends Activity implements OnClickListener {
 		bt_capture.setOnClickListener(this);
 		bt_upload.setOnClickListener(this);
 		bt_reconstruction.setOnClickListener(this);
+		tv_auto = new AutoCompleteTextView(this);
+		initAutoCompleteTextView();
+	}
+	
+	private void initAutoCompleteTextView() {
+		sp = getSharedPreferences("server_addr", 0);
+		Set<String> history = sp.getStringSet("history", new HashSet<String>());
+		String[] histArray = history.toArray(new String[0]);
+		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+				android.R.layout.simple_dropdown_item_1line, histArray);
+		tv_auto.setAdapter(adapter);
+		tv_auto.setThreshold(1);
+		tv_auto.setOnFocusChangeListener(new OnFocusChangeListener(){
+			@Override
+			public void onFocusChange(View v, boolean hasFocus) {
+				AutoCompleteTextView view = (AutoCompleteTextView) v;
+				if(hasFocus) {
+					view.showDropDown();
+				}
+			}
+		});
+	}
+	
+	private void saveServerAddr(String s) {
+		if(!s.equals("")) {
+			Set<String> history = sp.getStringSet("history", new HashSet<String>());
+			history.add(s);
+			sp.edit().putStringSet("history", history).commit();
+		}
 	}
 
 	@Override
@@ -113,15 +152,20 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 	
 	private void InputServerAddress() {
-		final EditText et = new EditText(this);
-		et.setHint("10.105.32.59:80");
-		new MyAlertDialog(this,et,"Input server address",bt_upload,
+//		final EditText et = new EditText(this);
+//		et.setHint("10.105.32.59:80");
+		ViewGroup vg = (ViewGroup) tv_auto.getParent();
+		if(vg != null) {
+			vg.removeView(tv_auto);
+		}
+		new MyAlertDialog(this,tv_auto,"Input server address",bt_upload,
 			new DialogInterface.OnClickListener() {
 				@Override
 				public void onClick(DialogInterface dialog, int which) {
-					String s = et.getText().toString();
+					String s = tv_auto.getText().toString();
 					updateServerAddr(s);
 					Log.d("InputAddress", " " + serverIp);
+					saveServerAddr(tv_auto.getText().toString());
 					picImage();
 				}
 			}).show();
@@ -131,12 +175,12 @@ public class MainActivity extends Activity implements OnClickListener {
 		AlertDialog.Builder dialog;
 		Button bt_triger;
 		
-		protected MyAlertDialog(Context context, EditText et, String title, Button bt,
+		protected MyAlertDialog(Context context, View v, String title, Button bt,
 				DialogInterface.OnClickListener okListener) {
 			bt_triger = bt;
 			dialog = new AlertDialog.Builder(context)
 				.setTitle(title)
-				.setView(et)
+				.setView(v)
 				.setCancelable(false)
 				.setPositiveButton(android.R.string.ok, okListener)
 				.setNegativeButton(android.R.string.cancel,
