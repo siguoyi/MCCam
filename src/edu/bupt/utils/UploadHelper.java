@@ -57,7 +57,7 @@ public class UploadHelper extends AsyncTask<File[], Integer, Object> {
 					result += line;
 				}
 				Log.i("Result", result);
-				publishProgress((i+1)*100/files.length);
+				publishProgress(i+1);
 			}
 			if(is != null) is.close();
 		} catch (ClientProtocolException e){

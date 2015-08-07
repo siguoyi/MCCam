@@ -32,6 +32,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private String server_url_log = "http://10.105.32.59/loglog.php";
 	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 			Environment.DIRECTORY_PICTURES), "MCCam");
+	private ArrayList<String> paths = new ArrayList<String>();
 	
 	private Button bt_capture;
 	private Button bt_upload;
@@ -164,12 +165,14 @@ public class MainActivity extends Activity implements OnClickListener {
 		case SELECT_IMAGES:
 			bt_upload.setEnabled(true);
 			if(resultCode == RESULT_OK){
-				ArrayList<String> paths = data.getStringArrayListExtra("IMAGE_PATHS");
+				paths = data.getStringArrayListExtra("IMAGE_PATHS");
 				if(!paths.isEmpty()) {
 					File[] files = new File[paths.size()];
 					for(int i=0;i<paths.size();i++) {
 						files[i] = new File(paths.get(i));
 					}
+					tv_message.setText("Uploading : 0 / " + paths.size() + "\n");
+					progressBar.setMax(files.length);
 					progressBar.setVisibility(ProgressBar.VISIBLE);
 					//new MyUploadHelper(serverIp).execute(files);
 					new MyUploadHelper(serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
@@ -189,6 +192,15 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void updateProgress(int progress) {
 			progressBar.setProgress(progress);
+			tv_message.setText(generateProgressInfo(progress));
+		}
+		
+		private String generateProgressInfo(int progress) {
+			String result = "Uploading : " + progress + " / " + progressBar.getMax() + "\n";
+			for (int i=0;i<progress;i++) {
+				result += paths.get(i) + "\n";
+			}
+			return result;
 		}
 
 		@Override
