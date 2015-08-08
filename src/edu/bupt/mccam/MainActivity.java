@@ -47,6 +47,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private TextView tv_message;
 	private ProgressBar progressBar;
 	private AutoCompleteTextView tv_auto;
+	private ArrayAdapter<String> tv_adapter;
 	
 	private SharedPreferences sp;
 	
@@ -73,9 +74,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		sp = getSharedPreferences("server_addr", 0);
 		Set<String> history = sp.getStringSet("history", new HashSet<String>());
 		String[] histArray = history.toArray(new String[0]);
-		ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+		tv_adapter = new ArrayAdapter<String>(this,
 				android.R.layout.simple_dropdown_item_1line, histArray);
-		tv_auto.setAdapter(adapter);
+		tv_auto.setAdapter(tv_adapter);
 		tv_auto.setThreshold(1);
 		tv_auto.setOnFocusChangeListener(new OnFocusChangeListener(){
 			@Override
@@ -90,9 +91,13 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	private void saveServerAddr(String s) {
 		if(!s.equals("")) {
-			Set<String> history = sp.getStringSet("history", new HashSet<String>());
-			history.add(s);
-			sp.edit().putStringSet("history", history).commit();
+			Set<String> hist = sp.getStringSet("history", new HashSet<String>());
+			if(!hist.contains(s)) {
+				tv_adapter.add(s);
+				Set<String> nhist = new HashSet<String>(hist);
+				nhist.add(s);
+				sp.edit().putStringSet("history", nhist).commit();
+			}
 		}
 	}
 
@@ -124,18 +129,30 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void InputPeakThreshold() {
 		tv_message.setText("");
 		final EditText et = new EditText(this);
-		et.setHint("10");
-		new MyAlertDialog(this,et,"Input peak threshold",bt_reconstruction,
-			new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					String s = et.getText().toString();
-					String value = s.equals("") ? "10" : s;				
-					Log.d("InputValue", " " + value);
-					new MyHttpClientTask().execute(server_url_reconstruction + value,
-							server_url_log);
-				}
-			}).show();
+		et.setHint("1");
+		new AlertDialog.Builder(this)
+			.setTitle("Input peak threshold")
+			.setView(et)
+			.setCancelable(false)
+			.setPositiveButton(android.R.string.ok,
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						String s = et.getText().toString();
+						String value = s.equals("") ? "10" : s;				
+						Log.d("InputValue", " " + value);
+						new MyHttpClientTask().execute(server_url_reconstruction + value,
+								server_url_log);
+					}
+				})
+			.setNegativeButton(android.R.string.cancel,
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						bt_reconstruction.setEnabled(true);
+					}
+				})
+			.show();
 	}
 	
 	private void updateServerAddr(String ip) {
@@ -152,49 +169,35 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 	
 	private void InputServerAddress() {
-//		final EditText et = new EditText(this);
-//		et.setHint("10.105.32.59:80");
 		ViewGroup vg = (ViewGroup) tv_auto.getParent();
 		if(vg != null) {
 			vg.removeView(tv_auto);
 		}
-		new MyAlertDialog(this,tv_auto,"Input server address",bt_upload,
-			new DialogInterface.OnClickListener() {
-				@Override
-				public void onClick(DialogInterface dialog, int which) {
-					String s = tv_auto.getText().toString();
-					updateServerAddr(s);
-					Log.d("InputAddress", " " + serverIp);
-					saveServerAddr(tv_auto.getText().toString());
-					picImage();
-				}
-			}).show();
-	}
-	
-	private class MyAlertDialog {
-		AlertDialog.Builder dialog;
-		Button bt_triger;
-		
-		protected MyAlertDialog(Context context, View v, String title, Button bt,
-				DialogInterface.OnClickListener okListener) {
-			bt_triger = bt;
-			dialog = new AlertDialog.Builder(context)
-				.setTitle(title)
-				.setView(v)
-				.setCancelable(false)
-				.setPositiveButton(android.R.string.ok, okListener)
-				.setNegativeButton(android.R.string.cancel,
-					new DialogInterface.OnClickListener() {
-						@Override
-						public void onClick(DialogInterface dialog,
-								int which) {
-							bt_triger.setEnabled(true);
-						}
-					});
-		}
-		public void show() {
-			dialog.show();
-		}
+		new AlertDialog.Builder(this)
+			.setTitle("Input server address")
+			.setView(tv_auto)
+			.setCancelable(false)
+			.setPositiveButton(android.R.string.ok,
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						String s = tv_auto.getText().toString();
+						updateServerAddr(s);
+						Log.d("InputAddress", " " + serverIp);
+						saveServerAddr(s);
+						tv_auto.setText("");
+						picImage();
+					}
+				})
+			.setNegativeButton(android.R.string.cancel,
+				new DialogInterface.OnClickListener() {
+					@Override
+					public void onClick(DialogInterface dialog, int which) {
+						tv_auto.setText("");
+						bt_upload.setEnabled(true);
+					}
+				})
+			.show();
 	}
 	
 	private void picImage() {
