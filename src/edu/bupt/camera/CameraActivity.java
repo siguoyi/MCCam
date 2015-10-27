@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
 import edu.bupt.mccam.R;
 import android.app.Activity;
 import android.content.Intent;
@@ -19,6 +20,7 @@ import android.graphics.PixelFormat;
 import android.graphics.PorterDuff.Mode;
 import android.hardware.Camera;
 import android.hardware.Camera.AutoFocusCallback;
+import android.hardware.Camera.Parameters;
 import android.hardware.Camera.PictureCallback;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
@@ -94,7 +96,11 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				Log.d("AutoFocus", "success!");
 				if(!onTouchFocus) {
 					try {
-						camera.takePicture(null, null, mPicture);	
+						camera.takePicture(null, null, mPicture);
+//						Parameters parameters = mCamera.getParameters();
+//						float focalLength = parameters.getFocalLength();
+//						Toast.makeText(CameraActivity.this, "FocalLength: " + focalLength, Toast.LENGTH_SHORT).show();
+//						Log.d("CameraActivity", "FocalLength: " + focalLength);
 					} catch(Exception e) {
 						e.printStackTrace();
 					}
@@ -176,6 +182,8 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				try {
 					ExifInterface exif = new ExifInterface(result.getAbsolutePath());
 					Log.d("orientation", " " + exif.getAttribute(ExifInterface.TAG_ORIENTATION));
+					Log.d("make", " " + exif.getAttribute(ExifInterface.TAG_MAKE));
+					Log.d("model", " " + exif.getAttribute(ExifInterface.TAG_MODEL));
 					exif.setAttribute(ExifInterface.TAG_ORIENTATION, "" + ExifInterface.ORIENTATION_ROTATE_90);
 					exif.saveAttributes();
 				} catch (IOException e) {
@@ -425,7 +433,9 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			List<Camera.Size> picSizes = params.getSupportedPictureSizes();
 			Camera.Size mSize = picSizes.get(0);
 			for(Camera.Size s:picSizes){
-				if(s.width > mSize.width){
+				Log.d("camera_size", "w" + s.width + ",h" + s.height);
+				int tmp = s.width*s.height;
+				if(tmp > 300000 && tmp < 340000){
 					mSize = s;
 				}
 			}

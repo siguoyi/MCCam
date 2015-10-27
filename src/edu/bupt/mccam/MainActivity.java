@@ -4,17 +4,23 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import edu.bupt.camera.AutoCapture;
 import edu.bupt.camera.CameraActivity;
 import edu.bupt.pickimg.ImagePickActivity;
+import edu.bupt.utils.DownloadHelper;
 import edu.bupt.utils.HttpClientHelper;
 import edu.bupt.utils.UploadHelper;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -44,12 +50,19 @@ public class MainActivity extends Activity implements OnClickListener {
 	private Button bt_capture;
 	private Button bt_upload;
 	private Button bt_reconstruction;
+	private Button bt_result;
 	private TextView tv_message;
 	private ProgressBar progressBar;
 	private AutoCompleteTextView tv_auto;
 	private ArrayAdapter<String> tv_adapter;
+	private String filePath;
 	
 	private SharedPreferences sp;
+	
+	private static final String packageName = "edu.buptant.pointscloudviewer";
+	private static final String className = "edu.buptant.pointscloudviewer.MainActivity";
+	
+	private String s;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +72,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		bt_capture = (Button)findViewById(R.id.bt_capture);
 		bt_upload = (Button)findViewById(R.id.bt_upload);
 		bt_reconstruction = (Button)findViewById(R.id.bt_reconstruction);
+		bt_result = (Button)findViewById(R.id.bt_result);
 		progressBar = (ProgressBar)findViewById(R.id.progressBar);
 		tv_message = (TextView) findViewById(R.id.tv_message);
 		
@@ -66,6 +80,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		bt_capture.setOnClickListener(this);
 		bt_upload.setOnClickListener(this);
 		bt_reconstruction.setOnClickListener(this);
+		bt_result.setOnClickListener(this);
 		tv_auto = new AutoCompleteTextView(this);
 		initAutoCompleteTextView();
 	}
@@ -105,25 +120,61 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		switch(v.getId()) {
 		case R.id.bt_capture:
-			Intent camIntent = new Intent(MainActivity.this, CameraActivity.class);
+			Intent camIntent = new Intent(MainActivity.this, AutoCapture.class);
 			startActivity(camIntent);
 			break;		
 		case R.id.bt_upload:
-			bt_upload.setEnabled(false);
-			if(mediaStorageDir.exists()) {
-				if (mediaStorageDir.list().length > 0) {
-					InputServerAddress();
-					break;
+			if(isNetworkConnected()){
+				bt_upload.setEnabled(false);
+				if(mediaStorageDir.exists()) {
+					if (mediaStorageDir.list().length > 0) {
+						InputServerAddress();
+						break;
+					}
 				}
+				bt_upload.setEnabled(true);
+				Toast.makeText(getApplicationContext(), "Nothing", Toast.LENGTH_LONG).show();
+			} else{
+				Toast.makeText(this, "Network is unavailable!",
+						Toast.LENGTH_LONG).show();
 			}
-			bt_upload.setEnabled(true);
-			Toast.makeText(getApplicationContext(), "Nothing", Toast.LENGTH_LONG).show();
 			break;
 		case R.id.bt_reconstruction:
 			bt_reconstruction.setEnabled(false);
 			InputPeakThreshold();
+			break;
+		case R.id.bt_result:
+			String downloadUrl = "http://60.247.77.137:52002/result/option-0000.obj";
+			Pattern p = Pattern.compile(".*result/(.*)");
+			Matcher m = p.matcher(downloadUrl);
+			if(m.find()){
+				s = m.group(1);
+			}
+			filePath = downloadResult(downloadUrl);
+			
+			break;
 		default: break;
 		}
+	}
+	
+	private String downloadResult(String downloadAddr) {
+		File fileDir = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
+											+ "/MCCresults");
+		if(!fileDir.exists()){
+			fileDir.mkdir();
+		}
+		File file = new File(fileDir, s);
+		progressBar.setMax(100);
+		progressBar.setVisibility(ProgressBar.VISIBLE);
+		new MyDownloadHelper(downloadAddr).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, file);
+		return file.getAbsolutePath();
+	}
+
+	public boolean isNetworkConnected() {
+		ConnectivityManager connManager = (ConnectivityManager) this
+				.getSystemService(CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
+		return networkInfo != null ? networkInfo.isConnected() : false;
 	}
 	
 	private void InputPeakThreshold() {
@@ -291,6 +342,38 @@ public class MainActivity extends Activity implements OnClickListener {
 						}
 					})
 			.show();
+	}
+	
+	private class MyDownloadHelper extends DownloadHelper {
+
+		public MyDownloadHelper(String downloadAddr) {
+			super(downloadAddr);
+		}
+
+		@Override
+		public void updateProgress(int progress) {
+			progressBar.setProgress(progress);
+			tv_message.setText(generateProgressInfo(progress));
+		}
+		
+		private String generateProgressInfo(int progress) {
+			String result = "Downloading : " + (progress*100) / progressBar.getMax() + "%\n";
+			return result;
+		}
+
+		@Override
+		public void onFinished() {
+			Toast.makeText(getApplicationContext(), "Download finished", Toast.LENGTH_LONG).show();
+			progressBar.setVisibility(ProgressBar.GONE);
+			progressBar.setProgress(0);
+			Intent intent = new Intent(Intent.ACTION_MAIN);
+			intent.addCategory(Intent.CATEGORY_LAUNCHER);            
+			ComponentName cn = new ComponentName(packageName, className);            
+			intent.setComponent(cn);
+			intent.putExtra("filePath", filePath);
+			startActivity(intent);
+		}
+		
 	}
 
 }
