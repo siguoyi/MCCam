@@ -139,9 +139,10 @@ public class MainActivity extends Activity implements OnClickListener {
 								int which) {
 							File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam");
 							deleteFile(file);
-							if(!file.exists()){
-								file.mkdirs();
-							}
+//							if(!file.exists()){
+//								file.mkdirs();
+//							}
+							Toast.makeText(MainActivity.this, "Clear complete!", Toast.LENGTH_SHORT).show();
 						}
 					})
 			.setNegativeButton("cancel",
@@ -405,20 +406,12 @@ public class MainActivity extends Activity implements OnClickListener {
             Log.d(TAG, "file is not existed!"); 
             return; 
         } else { 
-            if (file.isFile()) { 
-                file.delete(); 
-                return; 
-            } 
-            if (file.isDirectory()) { 
                 File[] childFile = file.listFiles(); 
-                if (childFile == null || childFile.length == 0) { 
-                    file.delete(); 
-                    return; 
-                } 
+                if(childFile.length == 0){
+                	return;
+                }
                 for (File f : childFile) { 
-                    deleteFile(f); 
-                } 
-                file.delete(); 
+                    f.delete(); 
             } 
         } 
     } 

@@ -98,6 +98,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	
 	private RealFrameTask mRealFrameTask;
 	private boolean isPreview =false;
+	private boolean touchFlag = true;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -112,6 +113,15 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		bt_capture.setOnClickListener(this);
 		mCamera=getCameraInstance();
 		mSurfaceView=(SurfaceView) findViewById(R.id.SurfaceView);
+		mSurfaceView.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				if(touchFlag){
+					mCamera.autoFocus(mAFCallback);
+				}
+			}
+		});
 		mSurfaceHolder=mSurfaceView.getHolder();
 		mSurfaceHolder.addCallback(this);
 		mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
@@ -343,11 +353,13 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			if(isRecording){
 				stopRecorder();
 				isPreview = false;
+				touchFlag = true;
 			}else{
 				// initialize video camera
 				mCamera.setOneShotPreviewCallback(VideoActivity.this);
 				isPreview = true;
 				if(prepareVideoRecorder()){
+					touchFlag = false;
 					mMediaRecorder.start();
 					bt_capture.setText("Stop");
 					mCamera.autoFocus(mAFCallback);
@@ -525,6 +537,13 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
 			String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + timeStamp + ".jpg";
 			File file = new File(path);
+			if(!file.exists()){
+				try {
+					file.createNewFile();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			FileOutputStream fos;
 			try {
 				fos = new FileOutputStream(file);
