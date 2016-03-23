@@ -1,16 +1,29 @@
 package edu.bupt.camera;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+
+import edu.bupt.camera.CameraActivity.PicRealtimeUpload;
 import edu.bupt.mccam.MainActivity;
 import edu.bupt.mccam.R;
 import android.graphics.Bitmap;
@@ -560,9 +573,53 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			uploadFile(file);
 			return null;
 		}
 		
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
+		}
+	}
+	
+	public void uploadFile(File file) {
+		
+		HttpClient httpClient = new DefaultHttpClient();
+		InputStream is = null;
+		try {
+			HttpPost httpPost = new HttpPost(MainActivity.serverIp);
+				Log.d("UploadFile", file.getAbsolutePath());
+				FileBody bin = new FileBody(file);
+				MultipartEntityBuilder me = MultipartEntityBuilder.create();
+				me.addPart("file", bin);
+				HttpEntity reqEntity = me.build();
+				httpPost.setEntity(reqEntity);
+				Log.i("HttpPost","request " + httpPost.getRequestLine());
+				HttpResponse response = httpClient.execute(httpPost);
+				Log.i("HttpResponse",response.getStatusLine().toString());
+				HttpEntity resEntity = response.getEntity();
+				if (resEntity != null) {
+					Log.i("resEntity","response content length: " + resEntity.getContentLength());
+				}
+				is = resEntity.getContent();
+				BufferedReader br = new BufferedReader(new InputStreamReader(is));
+				String line = "";
+				String result = "";
+				while ((line = br.readLine()) != null) {
+					result += line;
+				}
+				Log.i("Result", result);
+			if(is != null) is.close();
+		} catch (ClientProtocolException e){
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (httpClient != null){
+				httpClient.getConnectionManager().shutdown();
+			}
+		}
 	}
 	
 	class ScanThread implements Runnable{
