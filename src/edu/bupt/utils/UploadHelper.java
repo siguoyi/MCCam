@@ -24,9 +24,10 @@ public class UploadHelper extends AsyncTask<File[], Integer, Object> {
 	
 	public UploadHelper(String addr) {
 		user_upload_url = addr;
+		Log.d("url", "url: " + user_upload_url);
 	}
 	
-	private void uploadFile(File[] files) {
+	public void uploadFile(File[] files) {
 		if (files.length == 0) {
 			Log.i("FileList", "empty!");
 			return;

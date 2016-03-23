@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/capture_mode"
+      android:title="Capture Mode">
+        <menu >
+            <group android:checkableBehavior="single">
+               <item android:id="@+id/camera" android:title="Camera"></item>
+               <item android:id="@+id/video" android:title="Video"  android:checked="true"></item>
+            </group>
+        </menu>
+    </item>
+    <item android:id="@+id/frame_lifting"
+        android:title="Frame Lifting"/>
+    <item android:id="@+id/peek_threshold"
+      android:title="Peek Threshold"/>
+    <item android:id="@+id/upload_url"
+      android:title="Upload Url"/>
+    <item android:id="@+id/clear_history"
+        android:title="Clear History"/>
+</menu>

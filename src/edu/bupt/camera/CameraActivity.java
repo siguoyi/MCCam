@@ -7,7 +7,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import edu.bupt.mccam.MainActivity;
 import edu.bupt.mccam.R;
+import edu.bupt.mccam.MainActivity.MyUploadHelper;
+import edu.bupt.utils.UploadHelper;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -25,6 +28,8 @@ import android.hardware.Camera.PictureCallback;
 import android.media.ExifInterface;
 import android.media.MediaScannerConnection;
 import android.media.MediaScannerConnection.MediaScannerConnectionClient;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -97,10 +102,6 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				if(!onTouchFocus) {
 					try {
 						camera.takePicture(null, null, mPicture);
-//						Parameters parameters = mCamera.getParameters();
-//						float focalLength = parameters.getFocalLength();
-//						Toast.makeText(CameraActivity.this, "FocalLength: " + focalLength, Toast.LENGTH_SHORT).show();
-//						Log.d("CameraActivity", "FocalLength: " + focalLength);
 					} catch(Exception e) {
 						e.printStackTrace();
 					}
@@ -190,6 +191,9 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 					e.printStackTrace();
 				}
 				Toast.makeText(getApplicationContext(), "Picture saved", Toast.LENGTH_LONG).show();
+				File[] files = new File[1];
+				files[0] = result;
+				new PicRealtimeUpload(MainActivity.serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
 				newFile = result;
 				scanImages(result.getAbsolutePath(), false);
 			}
@@ -290,6 +294,13 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			}
 			break;
 		}
+	}
+	
+	public boolean isNetworkConnected() {
+		ConnectivityManager connManager = (ConnectivityManager) this
+				.getSystemService(CONNECTIVITY_SERVICE);
+		NetworkInfo networkInfo = connManager.getActiveNetworkInfo();
+		return networkInfo != null ? networkInfo.isConnected() : false;
 	}
 	
 	private void scanImages(final String scanPath, final boolean open) {
@@ -476,6 +487,21 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			}
 		}
 		return optimalSize;
+	}
+	
+	public class PicRealtimeUpload extends UploadHelper{
+		public String user_upload_url;
+		
+		public PicRealtimeUpload(String addr) {
+			super(addr);
+			this.user_upload_url = addr;
+		}
+		
+		@Override
+		protected Object doInBackground(File[]... params) {
+			super.uploadFile(params[0]);
+			return null;
+		}
 	}
 	
 	@Override
