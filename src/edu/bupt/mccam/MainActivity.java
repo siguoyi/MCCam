@@ -6,25 +6,34 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+
 import edu.bupt.camera.CameraActivity;
 import edu.bupt.camera.VideoActivity;
+import edu.bupt.camera.WebCameraActivity;
 import edu.bupt.pickimg.ImagePickActivity;
 import edu.bupt.utils.DownloadHelper;
 import edu.bupt.utils.HttpClientHelper;
 import edu.bupt.utils.UploadHelper;
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.util.AttributeSet;
 import android.util.Log;
+import android.view.InflateException;
 import android.view.LayoutInflater;
+import android.view.LayoutInflater.Factory;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -75,6 +84,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static int capture_mode = 1;	
 	private static boolean uploadFlag = false;
 	
+	private ActionBar actionBar;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -94,20 +105,60 @@ public class MainActivity extends Activity implements OnClickListener {
 		bt_result.setOnClickListener(this);
 		tv_auto = new AutoCompleteTextView(this);
 //		initAutoCompleteTextView();
-		
 		Log.d("MainActivity", "Frame numbers: " + frameNum + " Peek threshold: " + peek_threshold);
+		
+		if(!mediaStorageDir.exists()){
+			mediaStorageDir.mkdirs();
+		}
 	}
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
+//		setMenuBackground();
 		return true;
 	}
 	
+//	private void setMenuBackground() {
+//		MainActivity.this.getLayoutInflater().setFactory(new Factory() {
+//			
+//			@Override
+//			public View onCreateView(String name, Context context, AttributeSet attrs) {
+//				Log.d(TAG, "menu background name: " + name);
+//				 // 指定自定义inflate的对象  
+//                if (name.equalsIgnoreCase("com.android.internal.view.menu.ListMenuItemView")) {  
+//                	Log.d(TAG, "menu");
+//                    try {  
+//                        LayoutInflater f = getLayoutInflater();  
+//                        final View view = f.createView(name, null,attrs);  
+//                        new Handler().post(new Runnable() {  
+//                            public void run() {  
+//                                // 设置背景图片  
+////                                view.setBackgroundResource(R.color.menu); 
+//                            	view.setBackgroundColor(Color.GRAY);
+//                            }  
+//                        });  
+//                        return view;  
+//                    } catch (InflateException e) {  
+//                        e.printStackTrace();  
+//                    } catch (ClassNotFoundException e) {  
+//                        e.printStackTrace();  
+//                    }  
+//                }  
+//				return null;
+//			}
+//		});
+//		
+//	}
+
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		int id = item.getItemId();
 		switch (id) {
+		case R.id.web_camera:
+			Intent intent = new Intent(MainActivity.this, WebCameraActivity.class);
+			startActivity(intent);
+			break;
 		case R.id.frame_lifting:
 			showFrameSettingDialog();
 			break;
@@ -243,6 +294,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		dialog.show();
 	}
 	
+	
 //	private void initAutoCompleteTextView() {
 //		sp = getSharedPreferences("server_addr", 0);
 //		Set<String> history = sp.getStringSet("history", new HashSet<String>());
@@ -293,14 +345,14 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 			break;
 		case R.id.bt_reconstruction:
-			if(uploadFlag){
+//			if(uploadFlag){
 				uploadFlag = false;
 				bt_reconstruction.setEnabled(false);
 				new MyHttpClientTask().execute(server_url_reconstruction + peek_threshold,
 						server_url_log);
-			}else{
-				Toast.makeText(this, "Nothing to reconstruct", Toast.LENGTH_SHORT).show();
-			}
+//			}else{
+//				Toast.makeText(this, "Nothing to reconstruct", Toast.LENGTH_SHORT).show();
+//			}
 //			InputPeakThreshold();
 			break;
 		case R.id.bt_result:

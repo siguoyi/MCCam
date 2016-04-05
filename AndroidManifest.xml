@@ -5,7 +5,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="16"
+        android:minSdkVersion="11"
         android:targetSdkVersion="21" />
 
     <uses-permission android:name="android.permission.CAMERA" />
@@ -42,7 +42,7 @@
             android:name="edu.bupt.camera.CameraActivity"
             android:label="@string/title_activity_camera"
             android:screenOrientation="portrait"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+             >
         </activity>
         <activity
             android:name="edu.bupt.pickimg.ImagePickActivity"
@@ -51,6 +51,7 @@
         </activity>
         <activity android:name="edu.bupt.camera.VideoActivity"></activity>
         <activity android:name="edu.buptant.pointscloudviewer.MainActivity"></activity>
+        <activity android:name="edu.bupt.camera.WebCameraActivity"></activity>
         <service android:name="edu.bupt.camera.FrameLifting"></service>
     </application>
 

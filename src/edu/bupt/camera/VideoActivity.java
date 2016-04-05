@@ -211,6 +211,9 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		try {
 			mCamera.setPreviewDisplay(holder);
 			setCameraDisplayOrientation(this, 0, mCamera);
+			Parameters params = mCamera.getParameters();
+			params.setPreviewSize(640, 480);
+			mCamera.setParameters(params);
 			mCamera.startPreview();
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -226,6 +229,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		}
 		try {
 			mCamera.setPreviewDisplay(holder);
+			
 			mCamera.startPreview();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -251,7 +255,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		}
 		mMediaRecorder=new MediaRecorder();
 		// Step 1: Unlock and set camera to MediaRecorder
-		setCameraParameters();
+//		setCameraParameters();
 		mCamera.unlock();
 		mMediaRecorder.setCamera(mCamera);
 		// Step 2: Set sources
@@ -540,6 +544,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			Size size = mCamera.getParameters().getPreviewSize();
 			final int width = size.width;
 			final int height = size.height;
+			Log.d(TAG, "width: " + width +" height: " + height);
 			final YuvImage image = new YuvImage(data, ImageFormat.NV21, width, height, null);
 			ByteArrayOutputStream os = new ByteArrayOutputStream(data.length);
 			if(!image.compressToJpeg(new Rect(0, 0, width, height), 100, os)){

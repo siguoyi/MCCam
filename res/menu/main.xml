@@ -9,6 +9,7 @@
             </group>
         </menu>
     </item>
+   <item android:id="@+id/web_camera" android:title="Web Camera"/>
     <item android:id="@+id/frame_lifting"
         android:title="Frame Lifting"/>
     <item android:id="@+id/peek_threshold"
