@@ -113,6 +113,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	private boolean isPreview =false;
 	private boolean touchFlag = true;
 	private ScanThread scan;
+	private static volatile boolean isScanThreadAlive;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -125,8 +126,9 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 		bt_capture=(Button) findViewById(R.id.start);
 		bt_capture.setOnClickListener(this);
-		mCamera=getCameraInstance();
-		mSurfaceView=(SurfaceView) findViewById(R.id.SurfaceView);
+		mCamera = getCameraInstance();
+		mSurfaceView = (SurfaceView) findViewById(R.id.SurfaceView);
+		isScanThreadAlive = true;
 		mSurfaceView.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -632,22 +634,27 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 
 		@Override
 		public void run() {
-			while(!Thread.currentThread().isInterrupted()){
-				try {
-					if(mCamera != null && isPreview){
-						mCamera.setOneShotPreviewCallback(VideoActivity.this);
-						Log.d(TAG, "scan");
+			Log.d(TAG, "isScanThreadAlive: " + isScanThreadAlive);
+				while((!Thread.currentThread().isInterrupted()) && isScanThreadAlive){
+					try {
+						if(mCamera != null && isPreview){
+							mCamera.setOneShotPreviewCallback(VideoActivity.this);
+							Log.d(TAG, "scan");
+						}
+						Log.d(TAG, "run " + (long) (MainActivity.frameNum*1000));
+						Thread.sleep((long) (MainActivity.frameNum*1000));
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+						Thread.currentThread().interrupt();
 					}
-					Log.d(TAG, "" + (long) (MainActivity.frameNum*1000));
-					Thread.sleep((long) (MainActivity.frameNum*1000));
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					Thread.currentThread().interrupt();
-				}
 			}
-			
 		}
-		
 	}
 
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		isScanThreadAlive = false;
+		Log.d(TAG, "onDestroy "+isScanThreadAlive);
+	}
 }
