@@ -92,7 +92,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	private static int captureNum = 24;
 	
 	private float anglex, angley, anglez;
-	
+	private volatile int i = 1;
 	private Handler handler;
 	
 	private Camera mCamera;
@@ -112,6 +112,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	private RealFrameTask mRealFrameTask;
 	private boolean isPreview =false;
 	private boolean touchFlag = true;
+	private ScanThread scan;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -141,8 +142,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	
 		phoneMode = Build.MODEL;
 		phoneMake = Build.BRAND;
-		
-		new Thread(new ScanThread()).start();
+		scan = new ScanThread();
 		
 		handler=new Handler(){
 			@Override
@@ -380,6 +380,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 					mMediaRecorder.start();
 					bt_capture.setText("Stop");
 					mCamera.autoFocus(mAFCallback);
+					new Thread(scan).start();
 					isRecording = true;
 					init();
 					sensorManager.registerListener(this, gyroscopeSensor,
@@ -553,7 +554,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			byte[] tmp = os.toByteArray();
 			Bitmap bitmap = BitmapFactory.decodeByteArray(tmp, 0, tmp.length);
 			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-			String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + timeStamp + ".jpg";
+			String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + timeStamp + "_" + i++ +".jpg";
 			File file = new File(path);
 			if(!file.exists()){
 				try {
@@ -578,7 +579,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			uploadFile(file);
+//			uploadFile(file);
 			return null;
 		}
 		
@@ -637,7 +638,8 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 						mCamera.setOneShotPreviewCallback(VideoActivity.this);
 						Log.d(TAG, "scan");
 					}
-					Thread.sleep(MainActivity.frameNum*1000);
+					Log.d(TAG, "" + (long) (MainActivity.frameNum*1000));
+					Thread.sleep((long) (MainActivity.frameNum*1000));
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 					Thread.currentThread().interrupt();
@@ -647,4 +649,5 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		}
 		
 	}
+
 }

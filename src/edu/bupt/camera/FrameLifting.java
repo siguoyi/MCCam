@@ -31,7 +31,7 @@ public class FrameLifting extends Service {
 	private static int frameNumber;
 	
 	private Handler mHandler;
-
+	
 	@Override
 	public void onCreate() {
 		super.onCreate();
@@ -81,10 +81,10 @@ public class FrameLifting extends Service {
 				// 取得视频的长度(单位为秒)
 				int seconds = Integer.valueOf(time) / 1000;
 				// 得到每一秒时刻的bitmap比如第一秒,第二秒
-				frameNumber = seconds*MainActivity.frameNum;
+				frameNumber = (int) (seconds*MainActivity.frameNum);
 				for (int i = 1; i <= frameNumber; i++) {
 					Log.d(TAG, "framelift : " + i);
-					Bitmap bitmap = retriever.getFrameAtTime((i/MainActivity.frameNum)*1000*1000,MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
+					Bitmap bitmap = retriever.getFrameAtTime((int)(i/MainActivity.frameNum)*1000*1000,MediaMetadataRetriever.OPTION_CLOSEST_SYNC);
 //					Matrix matrix = new Matrix();
 //					matrix.setScale(1, 360/480);
 //					Bitmap tempBitmap = Bitmap.createBitmap(bitmap, 0, 0, 640, 360);

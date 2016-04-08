@@ -77,7 +77,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final String packageName = "edu.buptant.pointscloudviewer";
 	private static final String className = "edu.buptant.pointscloudviewer.MainActivity";
 		
-	public static int frameNum = 1;
+	public static double frameNum = 1;
 	public static float peek_threshold = 0.01f;
 //	public static String upload_url = "60.247.77.137:52002";
 	public static String upload_url = "";
@@ -223,7 +223,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				int num = Integer.parseInt(et_num.getText().toString());
+				double num = Double.valueOf(et_num.getText().toString());
 				frameNum = num;
 				Log.d("frame number", "Frame numbers: " + frameNum);
 			}
