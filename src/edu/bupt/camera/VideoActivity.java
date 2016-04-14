@@ -359,7 +359,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	
 	protected void onPause(){
 		super.onPause();
-		sensorManager.unregisterListener(this);
+//		sensorManager.unregisterListener(this);
 		flag=false;
 		releaseMediaRecorder();// if you are using MediaRecorder, release it first
 		releaseCamera();// release the camera immediately on pause event
@@ -385,8 +385,8 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 					new Thread(scan).start();
 					isRecording = true;
 					init();
-					sensorManager.registerListener(this, gyroscopeSensor,
-							SensorManager.SENSOR_DELAY_GAME);
+//					sensorManager.registerListener(this, gyroscopeSensor,
+//							SensorManager.SENSOR_DELAY_GAME);
 				}else{
 					releaseMediaRecorder();
 				}
@@ -418,7 +418,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	};
 	
 	private void stopRecorder(){
-		sensorManager.unregisterListener(this);
+//		sensorManager.unregisterListener(this);
 		handler.sendEmptyMessage(2);
 		mMediaRecorder.stop();// stop the recording
 		releaseMediaRecorder();// release the MediaRecorder object
@@ -581,7 +581,9 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-//			uploadFile(file);
+			if(MainActivity.isAutoUpload){
+				uploadFile(file);
+			}
 			return null;
 		}
 		

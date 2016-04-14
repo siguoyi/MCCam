@@ -84,6 +84,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static int capture_mode = 1;	
 	private static boolean uploadFlag = false;
 	
+	public static boolean isAutoUpload = true;
+	
 	private ActionBar actionBar;
 	
 	@Override
@@ -179,6 +181,29 @@ public class MainActivity extends Activity implements OnClickListener {
 			item.setChecked(true);
 			Toast.makeText(this, "Video Mode", Toast.LENGTH_SHORT).show();
 			Log.d("Capture Mode", "Video Mode");
+			break;
+		case R.id.isAutoUpload:
+			new AlertDialog.Builder(this)
+			.setTitle("Please choose whether auto upload?")
+			.setPositiveButton("ok",
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog,
+								int which) {
+							isAutoUpload = true;
+							Toast.makeText(MainActivity.this, "Auto Upload!", Toast.LENGTH_SHORT).show();
+						}
+					})
+			.setNegativeButton("cancel",
+					new DialogInterface.OnClickListener() {
+						@Override
+						public void onClick(DialogInterface dialog,
+								int which) {
+							isAutoUpload = false;
+							Toast.makeText(MainActivity.this, "Manual Upload!", Toast.LENGTH_SHORT).show();
+						}
+					})
+			.show();
 			break;
 		case R.id.clear_history:
 			new AlertDialog.Builder(this)

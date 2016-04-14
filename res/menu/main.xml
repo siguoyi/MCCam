@@ -16,6 +16,8 @@
       android:title="Peek Threshold"/>
     <item android:id="@+id/upload_url"
       android:title="Upload Url"/>
+    <item android:id="@+id/isAutoUpload"
+        android:title="isAutoUpload"/>
     <item android:id="@+id/clear_history"
         android:title="Clear History"/>
 </menu>

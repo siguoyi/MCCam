@@ -193,7 +193,9 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				Toast.makeText(getApplicationContext(), "Picture saved", Toast.LENGTH_LONG).show();
 				File[] files = new File[1];
 				files[0] = result;
-				new PicRealtimeUpload(MainActivity.serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
+				if(MainActivity.isAutoUpload){
+					new PicRealtimeUpload(MainActivity.serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
+				}
 				newFile = result;
 				scanImages(result.getAbsolutePath(), false);
 			}
