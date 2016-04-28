@@ -424,7 +424,7 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			DisplayMetrics dm = getScreenSize();
 			List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
 			Camera.Size mPreviewSize = getOptimalPreviewSize(previewSizes, dm.widthPixels, dm.heightPixels);
-			Log.d("OptimalPreviewSize", mPreviewSize.width + "X" + mPreviewSize.height);
+			Log.d("OptimalPreviewSize", mPreviewSize.width + "*" + mPreviewSize.height);
 			params.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
 			
 			double screenRatio = (double) dm.heightPixels/dm.widthPixels;
@@ -453,6 +453,7 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				}
 			}
 			params.setPictureSize(mSize.width, mSize.height);
+			Log.d("size", mSize.width + "*" + mSize.height);
 			mCamera.setParameters(params);
 		}
 	}
