@@ -422,14 +422,17 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			}
 			
 			DisplayMetrics dm = getScreenSize();
-			List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
-			Camera.Size mPreviewSize = getOptimalPreviewSize(previewSizes, dm.widthPixels, dm.heightPixels);
-			Log.d("OptimalPreviewSize", mPreviewSize.width + "*" + mPreviewSize.height);
-			params.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+//			List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
+//			Camera.Size mPreviewSize = getOptimalPreviewSize(previewSizes, dm.widthPixels, dm.heightPixels);
+//			Log.d("OptimalPreviewSize", mPreviewSize.width + "*" + mPreviewSize.height);
+//			params.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+			params.setPreviewSize(MainActivity.previewWidth, MainActivity.previewHeight);
 			
 			double screenRatio = (double) dm.heightPixels/dm.widthPixels;
-			double previewRatio = (double) Math.max(mPreviewSize.height,mPreviewSize.width)/
-					Math.min(mPreviewSize.height,mPreviewSize.width);
+//			double previewRatio = (double) Math.max(mPreviewSize.height,mPreviewSize.width)/
+//					Math.min(mPreviewSize.height,mPreviewSize.width);
+			double previewRatio = (double) Math.max(MainActivity.previewHeight,MainActivity.previewWidth)/
+					Math.min(MainActivity.previewHeight,MainActivity.previewWidth);
 			int width, height;
 			if (screenRatio > previewRatio){
 				height = dm.heightPixels;
@@ -443,17 +446,17 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 			lp.gravity = Gravity.CENTER;
 			cameraSurfaceView.setLayoutParams(lp);
 			
-			List<Camera.Size> picSizes = params.getSupportedPictureSizes();
-			Camera.Size mSize = picSizes.get(0);
-			for(Camera.Size s:picSizes){
-				Log.d("camera_size", "w" + s.width + ",h" + s.height);
-				int tmp = s.width*s.height;
-				if(tmp > 300000 && tmp < 340000){
-					mSize = s;
-				}
-			}
-			params.setPictureSize(mSize.width, mSize.height);
-			Log.d("size", mSize.width + "*" + mSize.height);
+//			List<Camera.Size> picSizes = params.getSupportedPictureSizes();
+//			Camera.Size mSize = picSizes.get(0);
+//			for(Camera.Size s:picSizes){
+//				Log.d("camera_size", "w" + s.width + ",h" + s.height);
+//				int tmp = s.width*s.height;
+//				if(tmp > 300000 && tmp < 340000){
+//					mSize = s;
+//				}
+//			}
+			params.setPictureSize(MainActivity.previewWidth, MainActivity.previewHeight);
+			Log.d("size", MainActivity.previewWidth + "*" + MainActivity.previewHeight);
 			mCamera.setParameters(params);
 		}
 	}

@@ -9,6 +9,17 @@
             </group>
         </menu>
     </item>
+    <item android:id="@+id/pixel"
+        android:title="Set pixel">
+		<menu >
+            <group android:checkableBehavior="single">
+               <item android:id="@+id/pixel_1" android:title="320*240"></item>
+               <item android:id="@+id/pixel_2" android:title="640*480"  android:checked="true"></item>
+               <item android:id="@+id/pixel_3" android:title="1280*720"></item>
+               <item android:id="@+id/pixel_4" android:title="1920*1080"></item>
+            </group>
+        </menu>
+	</item>
    <item android:id="@+id/web_camera" android:title="Web Camera"/>
     <item android:id="@+id/frame_lifting"
         android:title="Frame Lifting"/>

@@ -4,9 +4,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
 import edu.bupt.camera.CameraActivity;
 import edu.bupt.camera.VideoActivity;
 import edu.bupt.camera.WebCameraActivity;
@@ -18,27 +15,20 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.util.AttributeSet;
 import android.util.Log;
-import android.view.InflateException;
 import android.view.LayoutInflater;
-import android.view.LayoutInflater.Factory;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnFocusChangeListener;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -54,7 +44,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static String serverIp = "http://10.105.32.59/save_file.php";
 	private static String server_url_reconstruction = "http://10.105.32.59/reconstruction.php?peak_threshold=";
 	private String server_url_log = "http://10.105.32.59/loglog.php";
-//	private String download_url = "http://60.247.77.137:52002/result/option-0000.obj";
 	private String download_url = "http://10.105.32.59/result/option-0000.ply.csv";
 	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 			Environment.DIRECTORY_PICTURES), "MCCam");
@@ -79,7 +68,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		
 	public static double frameNum = 1;
 	public static float peek_threshold = 0.01f;
-//	public static String upload_url = "60.247.77.137:52002";
 	public static String upload_url = "";
 	private static int capture_mode = 1;	
 	private static boolean uploadFlag = false;
@@ -87,6 +75,9 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static boolean isAutoUpload = true;
 	
 	private ActionBar actionBar;
+	
+	public static int previewWidth = 640;
+	public static int previewHeight = 480;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -106,7 +97,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		bt_reconstruction.setOnClickListener(this);
 		bt_result.setOnClickListener(this);
 		tv_auto = new AutoCompleteTextView(this);
-//		initAutoCompleteTextView();
 		Log.d("MainActivity", "Frame numbers: " + frameNum + " Peek threshold: " + peek_threshold);
 		
 		if(!mediaStorageDir.exists()){
@@ -117,41 +107,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		getMenuInflater().inflate(R.menu.main, menu);
-//		setMenuBackground();
 		return true;
 	}
-	
-//	private void setMenuBackground() {
-//		MainActivity.this.getLayoutInflater().setFactory(new Factory() {
-//			
-//			@Override
-//			public View onCreateView(String name, Context context, AttributeSet attrs) {
-//				Log.d(TAG, "menu background name: " + name);
-//				 // 指定自定义inflate的对象  
-//                if (name.equalsIgnoreCase("com.android.internal.view.menu.ListMenuItemView")) {  
-//                	Log.d(TAG, "menu");
-//                    try {  
-//                        LayoutInflater f = getLayoutInflater();  
-//                        final View view = f.createView(name, null,attrs);  
-//                        new Handler().post(new Runnable() {  
-//                            public void run() {  
-//                                // 设置背景图片  
-////                                view.setBackgroundResource(R.color.menu); 
-//                            	view.setBackgroundColor(Color.GRAY);
-//                            }  
-//                        });  
-//                        return view;  
-//                    } catch (InflateException e) {  
-//                        e.printStackTrace();  
-//                    } catch (ClassNotFoundException e) {  
-//                        e.printStackTrace();  
-//                    }  
-//                }  
-//				return null;
-//			}
-//		});
-//		
-//	}
 
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
@@ -160,6 +117,26 @@ public class MainActivity extends Activity implements OnClickListener {
 		case R.id.web_camera:
 			Intent intent = new Intent(MainActivity.this, WebCameraActivity.class);
 			startActivity(intent);
+			break;
+		case R.id.pixel_1:
+			setPixel(320, 240);
+			item.setChecked(true);
+			Toast.makeText(this, "Resolution: 320*240", Toast.LENGTH_SHORT).show();
+			break;
+		case R.id.pixel_2:
+			setPixel(640, 480);
+			item.setChecked(true);
+			Toast.makeText(this, "Resolution: 640*480", Toast.LENGTH_SHORT).show();
+			break;
+		case R.id.pixel_3:
+			setPixel(1280, 720);
+			item.setChecked(true);
+			Toast.makeText(this, "Resolution: 1280*720", Toast.LENGTH_SHORT).show();
+			break;
+		case R.id.pixel_4:
+			setPixel(1920, 1080);
+			item.setChecked(true);
+			Toast.makeText(this, "Resolution: 1920*1080", Toast.LENGTH_SHORT).show();
 			break;
 		case R.id.frame_lifting:
 			showFrameSettingDialog();
@@ -185,7 +162,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		case R.id.isAutoUpload:
 			new AlertDialog.Builder(this)
 			.setTitle("Please choose whether auto upload?")
-			.setPositiveButton("ok",
+			.setPositiveButton("Yes",
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog,
@@ -194,7 +171,7 @@ public class MainActivity extends Activity implements OnClickListener {
 							Toast.makeText(MainActivity.this, "Auto Upload!", Toast.LENGTH_SHORT).show();
 						}
 					})
-			.setNegativeButton("cancel",
+			.setNegativeButton("No",
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog,
@@ -208,20 +185,17 @@ public class MainActivity extends Activity implements OnClickListener {
 		case R.id.clear_history:
 			new AlertDialog.Builder(this)
 			.setTitle("Clear history?")
-			.setPositiveButton("ok",
+			.setPositiveButton("Yes",
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog,
 								int which) {
 							File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam");
 							deleteFile(file);
-//							if(!file.exists()){
-//								file.mkdirs();
-//							}
 							Toast.makeText(MainActivity.this, "Clear complete!", Toast.LENGTH_SHORT).show();
 						}
 					})
-			.setNegativeButton("cancel",
+			.setNegativeButton("No",
 					new DialogInterface.OnClickListener() {
 						@Override
 						public void onClick(DialogInterface dialog,
@@ -318,26 +292,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		dialog = builder.create();
 		dialog.show();
 	}
-	
-	
-//	private void initAutoCompleteTextView() {
-//		sp = getSharedPreferences("server_addr", 0);
-//		Set<String> history = sp.getStringSet("history", new HashSet<String>());
-//		String[] histArray = history.toArray(new String[0]);
-//		tv_adapter = new ArrayAdapter<String>(this,
-//				android.R.layout.simple_dropdown_item_1line, histArray);
-//		tv_auto.setAdapter(tv_adapter);
-//		tv_auto.setThreshold(1);
-//		tv_auto.setOnFocusChangeListener(new OnFocusChangeListener(){
-//			@Override
-//			public void onFocusChange(View v, boolean hasFocus) {
-//				AutoCompleteTextView view = (AutoCompleteTextView) v;
-//				if(hasFocus) {
-//					view.showDropDown();
-//				}
-//			}
-//		});
-//	}
 	
 	@Override
 	public void onClick(View v) {
@@ -492,6 +446,11 @@ public class MainActivity extends Activity implements OnClickListener {
             } 
         } 
     } 
+	
+	private void setPixel(int width, int height){
+		previewWidth = width;
+		previewHeight = height;
+	}
 	
 	public class MyUploadHelper extends UploadHelper{
 		public MyUploadHelper(String addr) {

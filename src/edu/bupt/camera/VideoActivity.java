@@ -214,7 +214,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			mCamera.setPreviewDisplay(holder);
 			setCameraDisplayOrientation(this, 0, mCamera);
 			Parameters params = mCamera.getParameters();
-			params.setPreviewSize(640, 480);
+			params.setPreviewSize(MainActivity.previewWidth, MainActivity.previewHeight);
 			mCamera.setParameters(params);
 			mCamera.startPreview();
 		} catch (IOException e) {
@@ -231,8 +231,9 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		}
 		try {
 			mCamera.setPreviewDisplay(holder);
-			
 			mCamera.startPreview();
+			
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 			Log.d("surfaceCreated", "error setting camera preview" + e.getMessage());
@@ -267,7 +268,7 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		mMediaRecorder.setProfile(CamcorderProfile.get(CamcorderProfile.QUALITY_HIGH));
 		// Step 4: Set output file
 		mMediaRecorder.setOutputFile(getOutputMediaFile(MEDIA_TYPE_VIDEO).toString());
-		mMediaRecorder.setVideoSize(640, 480);
+		mMediaRecorder.setVideoSize(MainActivity.previewWidth, MainActivity.previewHeight);
 		// Step 5: Set the preview output
 		mMediaRecorder.setPreviewDisplay(mSurfaceHolder.getSurface());
 		 // Step 6: Prepare configured MediaRecorder
@@ -441,14 +442,16 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			}
 			
 			DisplayMetrics dm = getScreenSize();
-			List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
-			Camera.Size mPreviewSize = getOptimalPreviewSize(previewSizes, dm.widthPixels, dm.heightPixels);
-			Log.d("OptimalPreviewSize", mPreviewSize.width + "X" + mPreviewSize.height);
-			params.setPreviewSize(mPreviewSize.width, mPreviewSize.height);
+//			List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
+//			Camera.Size mPreviewSize = getOptimalPreviewSize(previewSizes, dm.widthPixels, dm.heightPixels);
+//			Log.d("OptimalPreviewSize", mPreviewSize.width + "X" + mPreviewSize.height);
+			params.setPreviewSize(MainActivity.previewWidth, MainActivity.previewHeight);
 			
 			double screenRatio = (double) dm.heightPixels/dm.widthPixels;
-			double previewRatio = (double) Math.max(mPreviewSize.height,mPreviewSize.width)/
-					Math.min(mPreviewSize.height,mPreviewSize.width);
+//			double previewRatio = (double) Math.max(mPreviewSize.height,mPreviewSize.width)/
+//					Math.min(mPreviewSize.height,mPreviewSize.width);
+			double previewRatio = (double) Math.max(MainActivity.previewHeight,MainActivity.previewWidth)/
+					Math.min(MainActivity.previewHeight,MainActivity.previewWidth);
 			int width, height;
 			if (screenRatio > previewRatio){
 				height = dm.heightPixels;
@@ -461,16 +464,16 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width, height);
 			
 			
-			List<Camera.Size> picSizes = params.getSupportedPictureSizes();
-			Camera.Size mSize = picSizes.get(0);
-			for(Camera.Size s:picSizes){
-				Log.d("camera_size", "w" + s.width + ",h" + s.height);
-				int tmp = s.width*s.height;
-				if(tmp > 300000 && tmp < 340000){
-					mSize = s;
-				}
-			}
-			params.setPictureSize(mSize.width, mSize.height);
+//			List<Camera.Size> picSizes = params.getSupportedPictureSizes();
+//			Camera.Size mSize = picSizes.get(0);
+//			for(Camera.Size s:picSizes){
+//				Log.d("camera_size", "w" + s.width + ",h" + s.height);
+//				int tmp = s.width*s.height;
+//				if(tmp > 300000 && tmp < 340000){
+//					mSize = s;
+//				}
+//			}
+//			params.setPictureSize(mSize.width, mSize.height);
 			mCamera.setParameters(params);
 		}
 	}
