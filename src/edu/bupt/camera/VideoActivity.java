@@ -10,7 +10,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -72,7 +74,7 @@ import android.widget.FrameLayout;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
-public class VideoActivity extends Activity implements SensorEventListener,OnClickListener,SurfaceHolder.Callback,PreviewCallback{
+public class VideoActivity extends Activity implements OnClickListener,SurfaceHolder.Callback,PreviewCallback{
 	
 	private static String TAG = "VideoActivity";
 	private static final float NS2S = 1.0f / 1000000000.0f;
@@ -81,9 +83,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	
 	private static final String packageName = "edu.bupt.framelifting";
 	private static final String className = "edu.bupt.framelifting.MainActivity";
-	
-	private SensorManager sensorManager;
-	private Sensor gyroscopeSensor;
 	
 	private float timestamp;
 	private float angle[] = new float[3];
@@ -115,6 +114,12 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	private ScanThread scan;
 	private static volatile boolean isScanThreadAlive;
 	
+	private volatile int num = 1;
+	private Queue<ByteArrayOutputStream> saveQueue;
+	private Queue<String> uploadPathQueue;
+	private SaveThread mSaveThread;
+	private UploadThread mUploadThread;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -122,8 +127,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		setContentView(R.layout.activity_auto_capture);
 		progressBar=(ProgressBar)findViewById(R.id.progressBar_record_progress);
 		progressBar.setVisibility(View.GONE);
-		sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-		gyroscopeSensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 		bt_capture=(Button) findViewById(R.id.start);
 		bt_capture.setOnClickListener(this);
 		mCamera = getCameraInstance();
@@ -144,14 +147,15 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	
 		phoneMode = Build.MODEL;
 		phoneMake = Build.BRAND;
+		saveQueue = new LinkedList<ByteArrayOutputStream>();
+		uploadPathQueue = new LinkedList<String>();
 		scan = new ScanThread();
-		
+		mSaveThread = new SaveThread();
+		mUploadThread = new UploadThread();
 		handler=new Handler(){
 			@Override
 			public void handleMessage(Message msg){
-				if(msg.what==1){
-					progressBar.setProgress(rotateProgress);
-				}
+				
 				if(msg.what==2){
 					Toast.makeText(VideoActivity.this,"Capture Complete!",Toast.LENGTH_SHORT).show();
 					
@@ -166,41 +170,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			}
 		};
 		
-	}
-	
-	public void init(){
-		rotateProgress=0;
-		angle[0]=0;
-		angle[1]=0;
-		angle[2]=0;
-		progressBar.setProgress(rotateProgress);
-		
-	}
-	
-	
-	
-	@Override
-	public void onSensorChanged(SensorEvent event) {
-		if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
-			if (timestamp != 0) {
-				final float dT = (event.timestamp - timestamp) * NS2S;
-				angle[0] += event.values[0] * dT;
-				angle[1] += event.values[1] * dT;
-				angle[2] += event.values[2] * dT;
-				anglex = (float) Math.toDegrees(angle[0]);
-				angley= (float) Math.toDegrees(angle[1]);
-				anglez = (float) Math.toDegrees(angle[2]);
-				flag = true;
-				
-				if(rotateProgress < 100){
-					rotateProgress = Math.abs((int)(((float)angley/360)*100));
-					handler.sendEmptyMessage(1);
-				}else{
-					stopRecorder();
-				}
-			}
-			timestamp = event.timestamp;
-		}
 	}
 
 	@Override
@@ -232,7 +201,10 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		try {
 			mCamera.setPreviewDisplay(holder);
 			mCamera.startPreview();
-			
+//			mSaveThread.start();
+//			if(MainActivity.isAutoUpload){
+//				mUploadThread.start();
+//			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -360,7 +332,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	
 	protected void onPause(){
 		super.onPause();
-//		sensorManager.unregisterListener(this);
 		flag=false;
 		releaseMediaRecorder();// if you are using MediaRecorder, release it first
 		releaseCamera();// release the camera immediately on pause event
@@ -375,7 +346,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 				isPreview = false;
 				touchFlag = true;
 			}else{
-				// initialize video camera
 				mCamera.setOneShotPreviewCallback(VideoActivity.this);
 				isPreview = true;
 				if(prepareVideoRecorder()){
@@ -385,18 +355,11 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 					mCamera.autoFocus(mAFCallback);
 					new Thread(scan).start();
 					isRecording = true;
-					init();
-//					sensorManager.registerListener(this, gyroscopeSensor,
-//							SensorManager.SENSOR_DELAY_GAME);
 				}else{
 					releaseMediaRecorder();
 				}
 			}
 		}
-		
-	}
-	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 		
 	}
 	
@@ -419,7 +382,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 	};
 	
 	private void stopRecorder(){
-//		sensorManager.unregisterListener(this);
 		handler.sendEmptyMessage(2);
 		mMediaRecorder.stop();// stop the recording
 		releaseMediaRecorder();// release the MediaRecorder object
@@ -427,7 +389,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		bt_capture.setText("Capture");
 		isRecording = false;
 		flag = false;
-		init();
 	}
 	
 	private void setCameraParameters(){
@@ -442,14 +403,9 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			}
 			
 			DisplayMetrics dm = getScreenSize();
-//			List<Camera.Size> previewSizes = params.getSupportedPreviewSizes();
-//			Camera.Size mPreviewSize = getOptimalPreviewSize(previewSizes, dm.widthPixels, dm.heightPixels);
-//			Log.d("OptimalPreviewSize", mPreviewSize.width + "X" + mPreviewSize.height);
 			params.setPreviewSize(MainActivity.previewWidth, MainActivity.previewHeight);
 			
 			double screenRatio = (double) dm.heightPixels/dm.widthPixels;
-//			double previewRatio = (double) Math.max(mPreviewSize.height,mPreviewSize.width)/
-//					Math.min(mPreviewSize.height,mPreviewSize.width);
 			double previewRatio = (double) Math.max(MainActivity.previewHeight,MainActivity.previewWidth)/
 					Math.min(MainActivity.previewHeight,MainActivity.previewWidth);
 			int width, height;
@@ -462,18 +418,6 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			}
 			Log.d("setFrameLayout", "w:" + width + "h:" + height);
 			FrameLayout.LayoutParams lp = new FrameLayout.LayoutParams(width, height);
-			
-			
-//			List<Camera.Size> picSizes = params.getSupportedPictureSizes();
-//			Camera.Size mSize = picSizes.get(0);
-//			for(Camera.Size s:picSizes){
-//				Log.d("camera_size", "w" + s.width + ",h" + s.height);
-//				int tmp = s.width*s.height;
-//				if(tmp > 300000 && tmp < 340000){
-//					mSize = s;
-//				}
-//			}
-//			params.setPictureSize(mSize.width, mSize.height);
 			mCamera.setParameters(params);
 		}
 	}
@@ -556,6 +500,12 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 			if(!image.compressToJpeg(new Rect(0, 0, width, height), 100, os)){
 				return null;
 			}
+			saveQueue.offer(os);
+			try {
+				os.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 			byte[] tmp = os.toByteArray();
 			Bitmap bitmap = BitmapFactory.decodeByteArray(tmp, 0, tmp.length);
 			String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
@@ -593,6 +543,67 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
+		}
+	}
+	
+	class SaveThread extends Thread{
+		@Override
+		public void run() {
+			super.run();
+			while(true){
+				while(!saveQueue.isEmpty()){
+					synchronized(this){
+						Log.d(TAG, "num: " + num);
+						ByteArrayOutputStream bos = saveQueue.poll();
+						byte[] tmp = bos.toByteArray();
+						Bitmap bitmap = BitmapFactory.decodeByteArray(tmp, 0, tmp.length);
+						String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+						String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + timeStamp + "_" + num++ +".jpg";
+						File file = new File(path);
+						if(!file.exists()){
+							try {
+								file.createNewFile();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+						FileOutputStream fos;
+						try {
+							fos = new FileOutputStream(file);
+							bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fos);
+							ExifInterface exif = new ExifInterface(path);
+							exif.setAttribute(ExifInterface.TAG_MAKE, phoneMake);
+							exif.setAttribute(ExifInterface.TAG_MODEL, phoneMode);
+							exif.setAttribute(ExifInterface.TAG_FOCAL_LENGTH, focalLength+"");
+							exif.saveAttributes();
+							fos.flush();
+							fos.close();
+							if(MainActivity.isAutoUpload){
+								uploadPathQueue.offer(path);
+							}
+						} catch (FileNotFoundException e) {
+							e.printStackTrace();
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	class UploadThread extends Thread{
+		@Override
+		public void run() {
+			super.run();
+			while(true){
+				while(!uploadPathQueue.isEmpty()){
+					synchronized (this) {
+						File file = new File(uploadPathQueue.poll());
+						uploadFile(file);
+					}
+				}
+			}
 		}
 	}
 	
@@ -639,14 +650,12 @@ public class VideoActivity extends Activity implements SensorEventListener,OnCli
 
 		@Override
 		public void run() {
-			Log.d(TAG, "isScanThreadAlive: " + isScanThreadAlive);
 				while((!Thread.currentThread().isInterrupted()) && isScanThreadAlive){
 					try {
 						if(mCamera != null && isPreview){
 							mCamera.setOneShotPreviewCallback(VideoActivity.this);
 							Log.d(TAG, "scan");
 						}
-						Log.d(TAG, "run " + (long) (MainActivity.frameNum*1000));
 						Thread.sleep((long) (MainActivity.frameNum*1000));
 					} catch (InterruptedException e) {
 						e.printStackTrace();
