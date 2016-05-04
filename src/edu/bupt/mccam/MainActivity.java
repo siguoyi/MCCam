@@ -1,13 +1,18 @@
 package edu.bupt.mccam;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+
 import edu.bupt.camera.CameraActivity;
 import edu.bupt.camera.VideoActivity;
 import edu.bupt.camera.WebCameraActivity;
 import edu.bupt.pickimg.ImagePickActivity;
+import edu.bupt.statistics.TimeStatistics;
 import edu.bupt.utils.DownloadHelper;
 import edu.bupt.utils.HttpClientHelper;
 import edu.bupt.utils.UploadHelper;
@@ -79,6 +84,11 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static int previewWidth = 640;
 	public static int previewHeight = 480;
 	
+	private static String timeStatisticPath = Environment.getExternalStorageDirectory().getAbsolutePath() 
+											+ File.separator +"time_statistic";
+	
+	private static File saveTimePath = new File(timeStatisticPath);
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -101,6 +111,10 @@ public class MainActivity extends Activity implements OnClickListener {
 		
 		if(!mediaStorageDir.exists()){
 			mediaStorageDir.mkdirs();
+		}
+		
+		if(!saveTimePath.exists()){
+			saveTimePath.mkdirs();
 		}
 	}
 	
@@ -327,6 +341,8 @@ public class MainActivity extends Activity implements OnClickListener {
 //			if(uploadFlag){
 				uploadFlag = false;
 				bt_reconstruction.setEnabled(false);
+				TimeStatistics.reconstructStartTime = System.currentTimeMillis();
+				Log.d(TAG, "reconstruct start time: " + TimeStatistics.reconstructStartTime);
 				new MyHttpClientTask().execute(server_url_reconstruction + peek_threshold,
 						server_url_log);
 //			}else{
@@ -361,6 +377,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 	
 	private void startPointCloudViewer(String filePath) {
+		saveToSDcard();
 		Intent intent = new Intent(Intent.ACTION_MAIN);
 		intent.addCategory(Intent.CATEGORY_LAUNCHER);            
 		ComponentName cn = new ComponentName(packageName, className);            
@@ -378,6 +395,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		filePath = result.getAbsolutePath();
 		progressBar.setMax(100);
 		progressBar.setVisibility(ProgressBar.VISIBLE);
+		TimeStatistics.downloadStartTime = System.currentTimeMillis();
+		Log.d(TAG, "download start time: " + TimeStatistics.downloadStartTime);
 		new MyDownloadHelper(downloadAddr).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, result);
 	}
 
@@ -399,6 +418,24 @@ public class MainActivity extends Activity implements OnClickListener {
 			server_url_log = "http://10.105.32.59/loglog.php";
 		}
 		
+	}
+	
+	private void saveToSDcard(){
+		File file = new File(timeStatisticPath, "time_statistic.txt");
+		long uploadTime = TimeStatistics.uploadCompleteTime - TimeStatistics.uploadStartTime;
+		long downloadTime = TimeStatistics.downloadCompleteTime - TimeStatistics.downloadStartTime;
+		long reconstructTime = TimeStatistics.reconstructCompleteTime - TimeStatistics.reconstructStartTime;
+		String s = uploadTime + "\t" + reconstructTime + "\t" + downloadTime;
+		try {
+			FileOutputStream fos = new FileOutputStream(file);
+			fos.write(s.getBytes());
+			fos.flush();
+			fos.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	private void picImage() {
@@ -423,6 +460,8 @@ public class MainActivity extends Activity implements OnClickListener {
 					progressBar.setMax(files.length);
 					progressBar.setVisibility(ProgressBar.VISIBLE);
 					//new MyUploadHelper(serverIp).execute(files);
+					TimeStatistics.uploadStartTime = System.currentTimeMillis();
+					Log.d(TAG, "upload start time: " + TimeStatistics.uploadStartTime);
 					new MyUploadHelper(serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
 					break;
 				}
@@ -474,6 +513,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void onFinished() {
 			Toast.makeText(getApplicationContext(), "Upload finished", Toast.LENGTH_LONG).show();
+			TimeStatistics.uploadCompleteTime = System.currentTimeMillis();
+			Log.d(TAG, "upload complete time: " + TimeStatistics.uploadCompleteTime);
 			uploadFlag = true;
 			progressBar.setVisibility(ProgressBar.GONE);
 			progressBar.setProgress(0);
@@ -489,6 +530,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void onFinished() {
 			bt_reconstruction.setEnabled(true);
+			TimeStatistics.reconstructCompleteTime = System.currentTimeMillis();
+			Log.d(TAG, "reconstruct complete time: " + TimeStatistics.reconstructCompleteTime);
 			Toast.makeText(getApplicationContext(), "finished reconstruction", Toast.LENGTH_LONG).show();	
 		}
 	}
@@ -535,6 +578,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		@Override
 		public void onFinished() {
 			Toast.makeText(getApplicationContext(), "Download finished", Toast.LENGTH_LONG).show();
+			TimeStatistics.downloadCompleteTime = System.currentTimeMillis();
+			Log.d(TAG, "download complete time: " + TimeStatistics.downloadCompleteTime);
 			progressBar.setVisibility(ProgressBar.GONE);
 			progressBar.setProgress(0);
 			startPointCloudViewer(filePath);

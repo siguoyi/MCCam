@@ -3,46 +3,46 @@ package edu.bupt.statistics;
 public class TimeStatistics {
 	private static final String TAG = TimeStatistics.class.getSimpleName();
 	
-	public static int uploadStartTime;
-	public static int uploadCompleteTime;
-	public static int reconstructStartTime;
-	public static int reconstructCompleteTime;
-	public static int downloadStartTime;
-	public static int downloadCompleteTime;
-	public static int getUploadStartTime() {
+	public static long uploadStartTime;
+	public static long uploadCompleteTime;
+	public static long reconstructStartTime;
+	public static long reconstructCompleteTime;
+	public static long downloadStartTime;
+	public static long downloadCompleteTime;
+	public static long getUploadStartTime() {
 		return uploadStartTime;
 	}
-	public static void setUploadStartTime(int uploadStartTime) {
+	public static void setUploadStartTime(long uploadStartTime) {
 		TimeStatistics.uploadStartTime = uploadStartTime;
 	}
-	public static int getUploadCompleteTime() {
+	public static long getUploadCompleteTime() {
 		return uploadCompleteTime;
 	}
-	public static void setUploadCompleteTime(int uploadCompleteTime) {
+	public static void setUploadCompleteTime(long uploadCompleteTime) {
 		TimeStatistics.uploadCompleteTime = uploadCompleteTime;
 	}
-	public static int getReconstructStartTime() {
+	public static long getReconstructStartTime() {
 		return reconstructStartTime;
 	}
-	public static void setReconstructStartTime(int reconstructStartTime) {
+	public static void setReconstructStartTime(long reconstructStartTime) {
 		TimeStatistics.reconstructStartTime = reconstructStartTime;
 	}
-	public static int getReconstructCompleteTime() {
+	public static long getReconstructCompleteTime() {
 		return reconstructCompleteTime;
 	}
-	public static void setReconstructCompleteTime(int reconstructCompleteTime) {
+	public static void setReconstructCompleteTime(long reconstructCompleteTime) {
 		TimeStatistics.reconstructCompleteTime = reconstructCompleteTime;
 	}
-	public static int getDownloadStartTime() {
+	public static long getDownloadStartTime() {
 		return downloadStartTime;
 	}
-	public static void setDownloadStartTime(int downloadStartTime) {
+	public static void setDownloadStartTime(long downloadStartTime) {
 		TimeStatistics.downloadStartTime = downloadStartTime;
 	}
-	public static int getDownloadCompleteTime() {
+	public static long getDownloadCompleteTime() {
 		return downloadCompleteTime;
 	}
-	public static void setDownloadCompleteTime(int downloadCompleteTime) {
+	public static void setDownloadCompleteTime(long downloadCompleteTime) {
 		TimeStatistics.downloadCompleteTime = downloadCompleteTime;
 	}
 	
