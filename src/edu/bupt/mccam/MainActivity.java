@@ -1,9 +1,12 @@
 package edu.bupt.mccam;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,6 +15,7 @@ import edu.bupt.camera.CameraActivity;
 import edu.bupt.camera.VideoActivity;
 import edu.bupt.camera.WebCameraActivity;
 import edu.bupt.pickimg.ImagePickActivity;
+import edu.bupt.statistics.CpuStatistics;
 import edu.bupt.statistics.TimeStatistics;
 import edu.bupt.utils.DownloadHelper;
 import edu.bupt.utils.HttpClientHelper;
@@ -85,10 +89,10 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static int previewWidth = 640;
 	public static int previewHeight = 480;
 	
-	private static String timeStatisticPath = Environment.getExternalStorageDirectory().getAbsolutePath() 
-											+ File.separator +"time_statistic";
+	private static String statisticPath = Environment.getExternalStorageDirectory().getAbsolutePath() 
+											+ File.separator +"statistics";
 	
-	private static File saveTimePath = new File(timeStatisticPath);
+	private static File saveTimePath = new File(statisticPath);
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -343,7 +347,9 @@ public class MainActivity extends Activity implements OnClickListener {
 				uploadFlag = false;
 				bt_reconstruction.setEnabled(false);
 				TimeStatistics.reconstructStartTime = System.currentTimeMillis();
-				Log.d(TAG, "reconstruct start time: " + TimeStatistics.reconstructStartTime);
+				CpuStatistics.reconstrct_totalCpuTime1 = getTotalCpuTime();
+				CpuStatistics.reconstrct_processCpuTime1 = getAppCpuTime();
+//				Log.d(TAG, "reconstruct start time: " + TimeStatistics.reconstructStartTime);
 				new MyHttpClientTask().execute(server_url_reconstruction + peek_threshold,
 						server_url_log);
 //			}else{
@@ -378,7 +384,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 	
 	private void startPointCloudViewer(String filePath) {
-		saveToSDcard();
+		saveTimeToSDcard();
+		saveCPUToSDcard();
 		Intent intent = new Intent(Intent.ACTION_MAIN);
 		intent.addCategory(Intent.CATEGORY_LAUNCHER);            
 		ComponentName cn = new ComponentName(packageName, className);            
@@ -397,7 +404,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		progressBar.setMax(100);
 		progressBar.setVisibility(ProgressBar.VISIBLE);
 		TimeStatistics.downloadStartTime = System.currentTimeMillis();
-		Log.d(TAG, "download start time: " + TimeStatistics.downloadStartTime);
+		CpuStatistics.download_totalCpuTime1 = getTotalCpuTime();
+		CpuStatistics.download_processCpuTime1 = getAppCpuTime();
+//		Log.d(TAG, "download start time: " + TimeStatistics.downloadStartTime);
 		new MyDownloadHelper(downloadAddr).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, result);
 	}
 
@@ -421,10 +430,60 @@ public class MainActivity extends Activity implements OnClickListener {
 		
 	}
 	
-	private void saveToSDcard(){
-		String filename = "time_statistic.txt";
+	public static float getProcessCpuRate(long totalCpuTime1, long processCpuTime1, long totalCpuTime2, long processCpuTime2){
+	         
+	       float cpuRate = 100 * (processCpuTime2 - processCpuTime1)
+	               / (totalCpuTime2 - totalCpuTime1);
+	         
+	       return cpuRate;
+	   }
+	     
+	   public static long getTotalCpuTime(){ // 获取系统总CPU使用时间
+	       String[] cpuInfos = null;
+	       try
+	       {
+	           BufferedReader reader = new BufferedReader(new InputStreamReader(
+	                   new FileInputStream("/proc/stat")), 1000);
+	           String load = reader.readLine();
+	           reader.close();
+	           cpuInfos = load.split(" ");
+	       }
+	       catch (IOException ex)
+	       {
+	           ex.printStackTrace();
+	       }
+	       long totalCpu = Long.parseLong(cpuInfos[2])
+	               + Long.parseLong(cpuInfos[3]) + Long.parseLong(cpuInfos[4])
+	               + Long.parseLong(cpuInfos[6]) + Long.parseLong(cpuInfos[5])
+	               + Long.parseLong(cpuInfos[7]) + Long.parseLong(cpuInfos[8]);
+	       return totalCpu;
+	   }
+	     
+	   public static long getAppCpuTime(){ // 获取应用占用的CPU时间
+	       String[] cpuInfos = null;
+	       try
+	       {
+	           int pid = android.os.Process.myPid();
+	           BufferedReader reader = new BufferedReader(new InputStreamReader(
+	                   new FileInputStream("/proc/" + pid + "/stat")), 1000);
+	           String load = reader.readLine();
+	           reader.close();
+	           cpuInfos = load.split(" ");
+	       }
+	       catch (IOException ex)
+	       {
+	           ex.printStackTrace();
+	       }
+	       long appCpuTime = Long.parseLong(cpuInfos[13])
+	               + Long.parseLong(cpuInfos[14]) + Long.parseLong(cpuInfos[15])
+	               + Long.parseLong(cpuInfos[16]);
+	       return appCpuTime;
+	   }
+	
+	private void saveTimeToSDcard(){
+		String filename = "time_statistics.txt";
 		
-		String filepath = timeStatisticPath + File.separator + filename;
+		String filepath = statisticPath + File.separator + filename;
 		File file = new File(filepath);
 		if(!file.exists()){
 			try {
@@ -439,6 +498,39 @@ public class MainActivity extends Activity implements OnClickListener {
 		String s = uploadTime + "\t" + reconstructTime + "\t" + downloadTime + "\t";
 		try {
 //			FileOutputStream fos = MainActivity.this.openFileOutput(filename, Context.MODE_APPEND);
+			FileOutputStream fos = new FileOutputStream(file, true);
+			fos.write(s.getBytes());
+			fos.flush();
+			fos.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private void saveCPUToSDcard(){
+		String filename = "cpu_statistics.txt";
+		
+		String filepath = statisticPath + File.separator + filename;
+		File file = new File(filepath);
+		if(!file.exists()){
+			try {
+				file.createNewFile();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		float uploadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
+								CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
+		float reconstructCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
+								CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
+		float downloadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
+								CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
+		String s = uploadCPU + "%\t" + reconstructCPU + "%\t" + downloadCPU + "%\t";
+		Log.d(TAG, "cpu statistics: " + s);
+		
+		try {
 			FileOutputStream fos = new FileOutputStream(file, true);
 			fos.write(s.getBytes());
 			fos.flush();
@@ -473,7 +565,9 @@ public class MainActivity extends Activity implements OnClickListener {
 					progressBar.setVisibility(ProgressBar.VISIBLE);
 					//new MyUploadHelper(serverIp).execute(files);
 					TimeStatistics.uploadStartTime = System.currentTimeMillis();
-					Log.d(TAG, "upload start time: " + TimeStatistics.uploadStartTime);
+					CpuStatistics.upload_totalCpuTime1 = getTotalCpuTime();
+					CpuStatistics.upload_processCpuTime1 = getAppCpuTime();
+//					Log.d(TAG, "upload start time: " + TimeStatistics.uploadStartTime);
 					new MyUploadHelper(serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
 					break;
 				}
@@ -526,7 +620,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		public void onFinished() {
 			Toast.makeText(getApplicationContext(), "Upload finished", Toast.LENGTH_LONG).show();
 			TimeStatistics.uploadCompleteTime = System.currentTimeMillis();
-			Log.d(TAG, "upload complete time: " + TimeStatistics.uploadCompleteTime);
+			CpuStatistics.upload_totalCpuTime2 = getTotalCpuTime();
+			CpuStatistics.upload_processCpuTime2 = getAppCpuTime();
+//			Log.d(TAG, "upload complete time: " + TimeStatistics.uploadCompleteTime);
 			uploadFlag = true;
 			progressBar.setVisibility(ProgressBar.GONE);
 			progressBar.setProgress(0);
@@ -543,7 +639,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		public void onFinished() {
 			bt_reconstruction.setEnabled(true);
 			TimeStatistics.reconstructCompleteTime = System.currentTimeMillis();
-			Log.d(TAG, "reconstruct complete time: " + TimeStatistics.reconstructCompleteTime);
+			CpuStatistics.reconstrct_totalCpuTime2 = getTotalCpuTime();
+			CpuStatistics.reconstrct_processCpuTime2 = getAppCpuTime();
+//			Log.d(TAG, "reconstruct complete time: " + TimeStatistics.reconstructCompleteTime);
 			Toast.makeText(getApplicationContext(), "finished reconstruction", Toast.LENGTH_LONG).show();	
 		}
 	}
@@ -591,7 +689,9 @@ public class MainActivity extends Activity implements OnClickListener {
 		public void onFinished() {
 			Toast.makeText(getApplicationContext(), "Download finished", Toast.LENGTH_LONG).show();
 			TimeStatistics.downloadCompleteTime = System.currentTimeMillis();
-			Log.d(TAG, "download complete time: " + TimeStatistics.downloadCompleteTime);
+			CpuStatistics.download_totalCpuTime2 = getTotalCpuTime();
+			CpuStatistics.download_processCpuTime2 = getAppCpuTime();
+//			Log.d(TAG, "download complete time: " + TimeStatistics.downloadCompleteTime);
 			progressBar.setVisibility(ProgressBar.GONE);
 			progressBar.setProgress(0);
 			startPointCloudViewer(filePath);
