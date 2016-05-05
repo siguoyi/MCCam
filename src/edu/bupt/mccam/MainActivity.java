@@ -85,10 +85,10 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static int previewWidth = 640;
 	public static int previewHeight = 480;
 	
-	private static String timeStatisticPath = Environment.getExternalStorageDirectory().getAbsolutePath() 
-											+ File.separator +"time_statistic";
-	
-	private static File saveTimePath = new File(timeStatisticPath);
+//	private static String timeStatisticPath = Environment.getExternalStorageDirectory().getAbsolutePath() 
+//											+ File.separator +"time_statistic";
+//	
+//	private static File saveTimePath = new File(timeStatisticPath);
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -114,9 +114,9 @@ public class MainActivity extends Activity implements OnClickListener {
 			mediaStorageDir.mkdirs();
 		}
 		
-		if(!saveTimePath.exists()){
-			saveTimePath.mkdirs();
-		}
+//		if(!saveTimePath.exists()){
+//			saveTimePath.mkdirs();
+//		}
 	}
 	
 	@Override
@@ -424,22 +424,22 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void saveToSDcard(){
 		String filename = "time_statistic.txt";
 		
-		String filepath = timeStatisticPath + File.separator + filename;
-		File file = new File(filepath);
-		if(!file.exists()){
-			try {
-				file.createNewFile();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
+//		String filepath = timeStatisticPath + File.separator + filename;
+//		File file = new File(filepath);
+//		if(!file.exists()){
+//			try {
+//				file.createNewFile();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
 		long uploadTime = TimeStatistics.uploadCompleteTime - TimeStatistics.uploadStartTime;
 		long downloadTime = TimeStatistics.downloadCompleteTime - TimeStatistics.downloadStartTime;
 		long reconstructTime = TimeStatistics.reconstructCompleteTime - TimeStatistics.reconstructStartTime;
 		String s = uploadTime + "\t" + reconstructTime + "\t" + downloadTime + "\t";
 		try {
-//			FileOutputStream fos = MainActivity.this.openFileOutput(filename, Context.MODE_APPEND);
-			FileOutputStream fos = new FileOutputStream(file, true);
+			FileOutputStream fos = MainActivity.this.openFileOutput(filename, Context.MODE_APPEND);
+//			FileOutputStream fos = new FileOutputStream(file, true);
 			fos.write(s.getBytes());
 			fos.flush();
 			fos.close();
