@@ -47,7 +47,7 @@
         android:layout_marginLeft="10dp"
         android:textSize="22sp"
         android:textColor="#0000FF"
-        android:text="Image processing"/>
+        android:text="SFM"/>
     
     <LinearLayout
         android:id="@+id/ll2"
@@ -57,34 +57,13 @@
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
         android:orientation="vertical" >
-        <LinearLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" >
-
-            <Button
-                android:id="@+id/bt_sift"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="SIFT"
-                android:textSize="20sp" />
-
-            <Button
-                android:id="@+id/bt_match"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="Match"
-                android:textSize="20sp" />
-        </LinearLayout>
 
         <Button
-            android:id="@+id/bt_reconstruction"
+            android:id="@+id/bt_sfm"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"           
             android:textSize="20sp"
-            android:text="Reconstruction" />
+            android:text="Reconstruction SFM" />
     </LinearLayout>
     
     <TextView android:id="@+id/title3"
@@ -95,22 +74,22 @@
         android:layout_marginLeft="10dp"
         android:textSize="22sp"
         android:textColor="#0000FF"
-        android:text="MCC cooperation"/>
+        android:text="SLAM"/>
     
     <Button
-        android:id="@+id/bt_mcc"
+        android:id="@+id/bt_slam"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/title3"
         android:layout_marginLeft="15dp"
         android:layout_marginRight="15dp"
         android:textSize="20sp"
-        android:text="MCC" />
+        android:text="Reconstruction SLAM" />
     
     <TextView android:id="@+id/title4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/bt_mcc"
+        android:layout_below="@id/bt_slam"
         android:layout_marginTop="5dp"
         android:layout_marginLeft="10dp"
         android:textSize="22sp"

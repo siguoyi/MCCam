@@ -51,8 +51,11 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static final String TAG = "MainActivity";
 	
 	private static final int SELECT_IMAGES = 1;
-	public static String serverIp = "http://10.105.32.59/save_file.php";
-	private static String server_url_reconstruction = "http://10.105.32.59/reconstruction.php?peak_threshold=";
+	public static String sfm_upload = "http://10.105.32.59/save_file.php";
+	public static String slam_upload = "http://10.105.37.23/save_file.php";
+	private static String sfm_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
+	private static String slam_url = "http://10.105.37.23/reconstruction_slam.php?peak_threshold=123456";
+
 	private String server_url_log = "http://10.105.32.59/loglog.php";
 	private String download_url = "http://10.105.32.59/result/option-0000.ply.csv";
 	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
@@ -63,7 +66,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	private Button bt_capture;
 	private Button bt_upload;
-	private Button bt_reconstruction;
+	private Button bt_sfm;
+	private Button bt_slam;
 	private Button bt_result;
 	private TextView tv_message;
 	private ProgressBar progressBar;
@@ -101,7 +105,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		
 		bt_capture = (Button)findViewById(R.id.bt_capture);
 		bt_upload = (Button)findViewById(R.id.bt_upload);
-		bt_reconstruction = (Button)findViewById(R.id.bt_reconstruction);
+		bt_sfm = (Button)findViewById(R.id.bt_sfm);
+		bt_slam = (Button) findViewById(R.id.bt_slam);
 		bt_result = (Button)findViewById(R.id.bt_result);
 		progressBar = (ProgressBar)findViewById(R.id.progressBar);
 		tv_message = (TextView) findViewById(R.id.tv_message);
@@ -109,7 +114,8 @@ public class MainActivity extends Activity implements OnClickListener {
 		progressBar.setVisibility(ProgressBar.GONE);
 		bt_capture.setOnClickListener(this);
 		bt_upload.setOnClickListener(this);
-		bt_reconstruction.setOnClickListener(this);
+		bt_sfm.setOnClickListener(this);
+		bt_slam.setOnClickListener(this);
 		bt_result.setOnClickListener(this);
 		tv_auto = new AutoCompleteTextView(this);
 		Log.d("MainActivity", "Frame numbers: " + frameNum + " Peek threshold: " + peek_threshold);
@@ -342,20 +348,23 @@ public class MainActivity extends Activity implements OnClickListener {
 						Toast.LENGTH_LONG).show();
 			}
 			break;
-		case R.id.bt_reconstruction:
+		case R.id.bt_sfm:
 //			if(uploadFlag){
 				uploadFlag = false;
-				bt_reconstruction.setEnabled(false);
+				bt_sfm.setEnabled(false);
 				TimeStatistics.reconstructStartTime = System.currentTimeMillis();
 				CpuStatistics.reconstrct_totalCpuTime1 = getTotalCpuTime();
 				CpuStatistics.reconstrct_processCpuTime1 = getAppCpuTime();
 //				Log.d(TAG, "reconstruct start time: " + TimeStatistics.reconstructStartTime);
-				new MyHttpClientTask().execute(server_url_reconstruction + peek_threshold,
+				new MyHttpClientTask().execute(sfm_url + peek_threshold,
 						server_url_log);
 //			}else{
 //				Toast.makeText(this, "Nothing to reconstruct", Toast.LENGTH_SHORT).show();
 //			}
 //			InputPeakThreshold();
+			break;
+		case R.id.bt_slam:
+			new MyHttpClientTask().execute(slam_url, server_url_log);
 			break;
 		case R.id.bt_result:
 			new AlertDialog.Builder(this)
@@ -419,23 +428,26 @@ public class MainActivity extends Activity implements OnClickListener {
 	
 	private void updateServerAddr(String ip) {
 		if (!ip.equals("")){
-			serverIp = "http://" + ip + "/save_file.php";
-			server_url_reconstruction = "http://" + ip + "/reconstruction.php?peak_threshold=";
+			sfm_upload = "http://" + ip + "/save_file.php";
+			sfm_url = "http://" + ip + "/reconstruction.php?peak_threshold=";
 			server_url_log = "http://" + ip + "/loglog.php";
 		} else {
-			serverIp = "http://10.105.32.59/save_file.php";
-			server_url_reconstruction = "http://10.105.32.59/reconstruction.php?peak_threshold=";
+			sfm_upload = "http://10.105.32.59/save_file.php";
+			sfm_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
 			server_url_log = "http://10.105.32.59/loglog.php";
 		}
 		
 	}
 	
 	public static float getProcessCpuRate(long totalCpuTime1, long processCpuTime1, long totalCpuTime2, long processCpuTime2){
-	         
-	       float cpuRate = 100 * (processCpuTime2 - processCpuTime1)
-	               / (totalCpuTime2 - totalCpuTime1);
-	         
-	       return cpuRate;
+	       if(totalCpuTime2 - totalCpuTime1 == 0){
+	    	   return 0;
+	       }else{
+	    	   float cpuRate = 100 * (processCpuTime2 - processCpuTime1)
+		               / (totalCpuTime2 - totalCpuTime1);
+		         
+		       return cpuRate;
+	       }
 	   }
 	     
 	   public static long getTotalCpuTime(){ // 获取系统总CPU使用时间
@@ -568,7 +580,7 @@ public class MainActivity extends Activity implements OnClickListener {
 					CpuStatistics.upload_totalCpuTime1 = getTotalCpuTime();
 					CpuStatistics.upload_processCpuTime1 = getAppCpuTime();
 //					Log.d(TAG, "upload start time: " + TimeStatistics.uploadStartTime);
-					new MyUploadHelper(serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
+					new MyUploadHelper(sfm_upload).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
 					break;
 				}
 			} 
@@ -637,7 +649,7 @@ public class MainActivity extends Activity implements OnClickListener {
 
 		@Override
 		public void onFinished() {
-			bt_reconstruction.setEnabled(true);
+			bt_sfm.setEnabled(true);
 			TimeStatistics.reconstructCompleteTime = System.currentTimeMillis();
 			CpuStatistics.reconstrct_totalCpuTime2 = getTotalCpuTime();
 			CpuStatistics.reconstrct_processCpuTime2 = getAppCpuTime();

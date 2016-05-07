@@ -194,7 +194,7 @@ public class CameraActivity extends Activity implements OnClickListener, Surface
 				File[] files = new File[1];
 				files[0] = result;
 				if(MainActivity.isAutoUpload){
-					new PicRealtimeUpload(MainActivity.serverIp).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
+					new PicRealtimeUpload(MainActivity.sfm_upload).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
 				}
 				newFile = result;
 				scanImages(result.getAbsolutePath(), false);

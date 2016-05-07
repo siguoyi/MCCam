@@ -9,6 +9,8 @@ public class TimeStatistics {
 	public static long reconstructCompleteTime;
 	public static long downloadStartTime;
 	public static long downloadCompleteTime;
+	
+	
 	public static long getUploadStartTime() {
 		return uploadStartTime;
 	}

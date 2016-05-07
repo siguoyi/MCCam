@@ -117,8 +117,8 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 	private volatile int num = 1;
 	private Queue<ByteArrayOutputStream> saveQueue;
 	private Queue<String> uploadPathQueue;
-	private SaveThread mSaveThread;
-	private UploadThread mUploadThread;
+//	private SaveThread mSaveThread;
+//	private UploadThread mUploadThread;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -150,8 +150,8 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 		saveQueue = new LinkedList<ByteArrayOutputStream>();
 		uploadPathQueue = new LinkedList<String>();
 		scan = new ScanThread();
-		mSaveThread = new SaveThread();
-		mUploadThread = new UploadThread();
+//		mSaveThread = new SaveThread();
+//		mUploadThread = new UploadThread();
 		handler=new Handler(){
 			@Override
 			public void handleMessage(Message msg){
@@ -500,7 +500,7 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 			if(!image.compressToJpeg(new Rect(0, 0, width, height), 100, os)){
 				return null;
 			}
-			saveQueue.offer(os);
+//			saveQueue.offer(os);
 			try {
 				os.flush();
 			} catch (IOException e) {
@@ -612,7 +612,7 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 		HttpClient httpClient = new DefaultHttpClient();
 		InputStream is = null;
 		try {
-			HttpPost httpPost = new HttpPost(MainActivity.serverIp);
+			HttpPost httpPost = new HttpPost(MainActivity.sfm_upload);
 				Log.d("UploadFile", file.getAbsolutePath());
 				FileBody bin = new FileBody(file);
 				MultipartEntityBuilder me = MultipartEntityBuilder.create();
