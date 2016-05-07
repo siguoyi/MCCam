@@ -52,6 +52,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.SystemClock;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -69,6 +70,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.Window;
 import android.widget.Button;
+import android.widget.Chronometer;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ProgressBar;
@@ -111,7 +113,7 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 	private RealFrameTask mRealFrameTask;
 	private boolean isPreview =false;
 	private boolean touchFlag = true;
-	private ScanThread scan;
+//	private ScanThread scan;
 	private static volatile boolean isScanThreadAlive;
 	
 	private volatile int num = 1;
@@ -120,11 +122,16 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 //	private SaveThread mSaveThread;
 //	private UploadThread mUploadThread;
 	
+	private Timer mTimer;
+	private TimerTask mTimerTask;
+	private Chronometer mChronometer;
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.activity_auto_capture);
+		mChronometer = (Chronometer) findViewById(R.id.tv_clock);
 		progressBar=(ProgressBar)findViewById(R.id.progressBar_record_progress);
 		progressBar.setVisibility(View.GONE);
 		bt_capture=(Button) findViewById(R.id.start);
@@ -132,6 +139,20 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 		mCamera = getCameraInstance();
 		mSurfaceView = (SurfaceView) findViewById(R.id.SurfaceView);
 		isScanThreadAlive = true;
+		mTimer = new Timer();
+		mTimerTask = new TimerTask() {
+			
+			@Override
+			public void run() {
+				if(mCamera != null && isPreview){
+					mCamera.setOneShotPreviewCallback(VideoActivity.this);
+					Log.d(TAG, "scan");
+				}
+			}
+		};
+		
+		registerForContextMenu(mChronometer);
+		
 		mSurfaceView.setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -149,7 +170,7 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 		phoneMake = Build.BRAND;
 		saveQueue = new LinkedList<ByteArrayOutputStream>();
 		uploadPathQueue = new LinkedList<String>();
-		scan = new ScanThread();
+//		scan = new ScanThread();
 //		mSaveThread = new SaveThread();
 //		mUploadThread = new UploadThread();
 		handler=new Handler(){
@@ -345,15 +366,22 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 				stopRecorder();
 				isPreview = false;
 				touchFlag = true;
+				mTimer.cancel();
+				mChronometer.stop();
+				mChronometer.setVisibility(View.GONE);
 			}else{
-				mCamera.setOneShotPreviewCallback(VideoActivity.this);
+//				mCamera.setOneShotPreviewCallback(VideoActivity.this);
 				isPreview = true;
 				if(prepareVideoRecorder()){
+					mChronometer.setVisibility(View.VISIBLE);
+					mChronometer.setBase(SystemClock.elapsedRealtime());
+					mChronometer.start();
+					mTimer.schedule(mTimerTask, 0,1000);
 					touchFlag = false;
 					mMediaRecorder.start();
 					bt_capture.setText("Stop");
 					mCamera.autoFocus(mAFCallback);
-					new Thread(scan).start();
+//					new Thread(scan).start();
 					isRecording = true;
 				}else{
 					releaseMediaRecorder();
@@ -543,6 +571,7 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 		@Override
 		protected void onPostExecute(Void result) {
 			super.onPostExecute(result);
+			
 		}
 	}
 	
@@ -646,24 +675,24 @@ public class VideoActivity extends Activity implements OnClickListener,SurfaceHo
 		}
 	}
 	
-	class ScanThread implements Runnable{
-
-		@Override
-		public void run() {
-				while((!Thread.currentThread().isInterrupted()) && isScanThreadAlive){
-					try {
-						if(mCamera != null && isPreview){
-							mCamera.setOneShotPreviewCallback(VideoActivity.this);
-							Log.d(TAG, "scan");
-						}
-						Thread.sleep((long) (MainActivity.frameNum*1000));
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-						Thread.currentThread().interrupt();
-					}
-			}
-		}
-	}
+//	class ScanThread implements Runnable{
+//
+//		@Override
+//		public void run() {
+//				while((!Thread.currentThread().isInterrupted()) && isScanThreadAlive){
+//					try {
+//						if(mCamera != null && isPreview){
+//							mCamera.setOneShotPreviewCallback(VideoActivity.this);
+//							Log.d(TAG, "scan");
+//						}
+//						Thread.sleep((long) (MainActivity.frameNum*1000));
+//					} catch (InterruptedException e) {
+//						e.printStackTrace();
+//						Thread.currentThread().interrupt();
+//					}
+//			}
+//		}
+//	}
 
 	@Override
 	protected void onDestroy() {

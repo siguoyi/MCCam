@@ -17,12 +17,24 @@
 	    </SurfaceView>    
     </FrameLayout>  
       
+    <Chronometer 
+            android:id="@+id/tv_clock"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:format="%s"
+            android:textSize="40sp"
+            android:visibility="gone"
+            android:textColor="#ff0000"/>
     <RelativeLayout    
         android:layout_width="fill_parent"    
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:gravity="center">
 	    
+        
         <ProgressBar
             android:id="@+id/progressBar_record_progress"
             style="?android:attr/progressBarStyleHorizontal"
