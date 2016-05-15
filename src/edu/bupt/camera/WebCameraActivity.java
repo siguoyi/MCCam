@@ -290,9 +290,10 @@ class SaveThread extends Thread{
 					ByteArrayOutputStream bos = saveQueue.poll();
 					byte[] tmp = bos.toByteArray();
 					Bitmap bitmap = BitmapFactory.decodeByteArray(tmp, 0, tmp.length);
-					String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-//					String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + timeStamp + "_" + num++ +".jpg";
-					String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + num++ +".jpg";
+					String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmssSSS").format(new Date());
+//					String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + timeStamp + ".jpg";
+					String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + timeStamp + "_" + num++ +".jpg";
+//					String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam"+ File.separator + num++ +".jpg";
 					File file = new File(path);
 					if(!file.exists()){
 						try {

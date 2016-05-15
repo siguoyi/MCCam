@@ -60,9 +60,10 @@ public class MainActivity extends Activity implements OnClickListener {
 	public static String slam_upload = "http://10.105.32.59/save_file_slam.php";
 	private static String sfm_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
 	private static String slam_url = "http://10.105.32.59/reconstruction_slam.php?peak_threshold=123456";
-
 	private String server_url_log = "http://10.105.32.59/loglog.php";
-	private String download_url = "http://10.105.32.59/result/option-0000.ply.csv";
+	private String sfm_download = "http://10.105.32.59/result/option-0000.ply.csv";
+	private String slam_download = "http://10.105.32.59/result_slam/pc.ply";
+
 	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 			Environment.DIRECTORY_PICTURES), "MCCam");
 	private static File resultsFileDir = new File(Environment.getExternalStorageDirectory()
@@ -362,13 +363,14 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 			break;
 		case R.id.bt_sfm:
+			uploadFlag = false;
+			bt_sfm.setEnabled(false);
+			TimeStatistics.reconstructStartTime = System.currentTimeMillis();
+			CpuStatistics.reconstrct_totalCpuTime1 = getTotalCpuTime();
+			CpuStatistics.reconstrct_processCpuTime1 = getAppCpuTime();
+			
 			if(reconstruct_mode == SFM_MODE){
 //				if(uploadFlag){
-					uploadFlag = false;
-					bt_sfm.setEnabled(false);
-					TimeStatistics.reconstructStartTime = System.currentTimeMillis();
-					CpuStatistics.reconstrct_totalCpuTime1 = getTotalCpuTime();
-					CpuStatistics.reconstrct_processCpuTime1 = getAppCpuTime();
 //					Log.d(TAG, "reconstruct start time: " + TimeStatistics.reconstructStartTime);
 					new MyHttpClientTask().execute(sfm_url + peek_threshold,
 							server_url_log);
@@ -388,7 +390,11 @@ public class MainActivity extends Activity implements OnClickListener {
 						@Override
 						public void onClick(DialogInterface dialog,
 								int which) {
-							downloadResult(download_url);
+							if(reconstruct_mode == SFM_MODE){
+								downloadResult(sfm_download);
+							}else{
+								downloadResult(slam_download);
+							}
 						}
 					})
 			.setNegativeButton("cancel",
@@ -446,12 +452,16 @@ public class MainActivity extends Activity implements OnClickListener {
 			slam_upload = "http://" + ip + "/save_file_slam.php";
 			sfm_url = "http://" + ip + "/reconstruction.php?peak_threshold=";
 			slam_url = "http://" + ip + "/reconstruction_slam.php?peak_threshold=123456";
+			sfm_download = "http://" + ip + "/result/option-0000.ply.csv";
+			slam_download = "http://" + ip + "/result_slam/pc.ply";
 			server_url_log = "http://" + ip + "/loglog.php";
 		} else {
 			sfm_upload = "http://10.105.32.59/save_file.php";
 			slam_upload = "http://10.105.32.59/save_file_slam.php";
 			sfm_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
 			slam_url = "http://10.105.32.59/reconstruction_slam.php?peak_threshold=123456";
+			sfm_download = "http://10.105.32.59/result/option-0000.ply.csv";
+			slam_download = "http://10.105.32.59/result_slam/pc.ply";
 			server_url_log = "http://10.105.32.59/loglog.php";
 		}
 		
@@ -528,15 +538,15 @@ public class MainActivity extends Activity implements OnClickListener {
 		switch (saveType) {
 			case UPLOAD:
 				long uploadTime = TimeStatistics.uploadCompleteTime - TimeStatistics.uploadStartTime;
-				s = "upload_time: " + "\t" + uploadTime + "\t";
+				s = "upload_time: " + "\t" + uploadTime + "\n";
 				break;
 			case RECONSTRUCTION:
 				long reconstructTime = TimeStatistics.reconstructCompleteTime - TimeStatistics.reconstructStartTime;
-				s = "reconstruct_time: " + "\t" + reconstructTime + "\t";
+				s = "reconstruct_time: " + "\t" + reconstructTime + "\n";
 				break;
 			case DOWNLOAD:
 				long downloadTime = TimeStatistics.downloadCompleteTime - TimeStatistics.downloadStartTime;
-				s = "download_time: " + "\t" + downloadTime + "\t";
+				s = "download_time: " + "\t" + downloadTime + "\n";
 				break;
 		}
 		
@@ -572,17 +582,17 @@ public class MainActivity extends Activity implements OnClickListener {
 			case UPLOAD:
 				float uploadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
 						CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
-				s = "upload_cpu: " + "\t" + uploadCPU + "%\t";
+				s = "upload_cpu: " + "\t" + uploadCPU + "%\n";
 				break;
 			case RECONSTRUCTION:
-				float reconstructCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
-						CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);
-				s = "reconstruct_cpu: " + "\t" + reconstructCPU + "%\t";
+				float reconstructCPU = getProcessCpuRate(CpuStatistics.reconstrct_totalCpuTime1, CpuStatistics.reconstrct_processCpuTime1, 
+						CpuStatistics.reconstrct_totalCpuTime2, CpuStatistics.reconstrct_processCpuTime2);
+				s = "reconstruct_cpu: " + "\t" + reconstructCPU + "%\n";
 				break;
 			case DOWNLOAD:
-				float downloadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
-						CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);
-				s = "download_cpu: " + "\t" + downloadCPU + "%\t";
+				float downloadCPU = getProcessCpuRate(CpuStatistics.download_totalCpuTime1, CpuStatistics.download_processCpuTime1, 
+						CpuStatistics.download_totalCpuTime2, CpuStatistics.download_processCpuTime2);
+				s = "download_cpu: " + "\t" + downloadCPU + "%\n";
 				break;
 		}
 		
