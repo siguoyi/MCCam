@@ -49,12 +49,17 @@ import android.widget.Toast;
 
 public class MainActivity extends Activity implements OnClickListener {
 	private static final String TAG = "MainActivity";
+	private static final int UPLOAD = 101;
+	private static final int RECONSTRUCTION = 102;
+	private static final int DOWNLOAD = 103;
+	private static final int SFM_MODE = 11;
+	private static final int SLAM_MODE = 12;
 	
 	private static final int SELECT_IMAGES = 1;
 	public static String sfm_upload = "http://10.105.32.59/save_file.php";
-	public static String slam_upload = "http://10.105.37.23/save_file.php";
+	public static String slam_upload = "http://10.105.32.59/save_file_slam.php";
 	private static String sfm_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
-	private static String slam_url = "http://10.105.37.23/reconstruction_slam.php?peak_threshold=123456";
+	private static String slam_url = "http://10.105.32.59/reconstruction_slam.php?peak_threshold=123456";
 
 	private String server_url_log = "http://10.105.32.59/loglog.php";
 	private String download_url = "http://10.105.32.59/result/option-0000.ply.csv";
@@ -67,7 +72,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	private Button bt_capture;
 	private Button bt_upload;
 	private Button bt_sfm;
-	private Button bt_slam;
 	private Button bt_result;
 	private TextView tv_message;
 	private ProgressBar progressBar;
@@ -82,12 +86,11 @@ public class MainActivity extends Activity implements OnClickListener {
 		
 	public static double frameNum = 1;
 	public static float peek_threshold = 0.01f;
-	public static String upload_url = "";
+	public static String serverIp = "";
 	private static int capture_mode = 1;	
 	private static boolean uploadFlag = false;
-	
-	public static boolean isAutoUpload = true;
-	
+	public static boolean isAutoUpload = false;
+	private static int reconstruct_mode = SFM_MODE;
 	private ActionBar actionBar;
 	
 	public static int previewWidth = 640;
@@ -106,7 +109,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		bt_capture = (Button)findViewById(R.id.bt_capture);
 		bt_upload = (Button)findViewById(R.id.bt_upload);
 		bt_sfm = (Button)findViewById(R.id.bt_sfm);
-		bt_slam = (Button) findViewById(R.id.bt_slam);
 		bt_result = (Button)findViewById(R.id.bt_result);
 		progressBar = (ProgressBar)findViewById(R.id.progressBar);
 		tv_message = (TextView) findViewById(R.id.tv_message);
@@ -115,7 +117,6 @@ public class MainActivity extends Activity implements OnClickListener {
 		bt_capture.setOnClickListener(this);
 		bt_upload.setOnClickListener(this);
 		bt_sfm.setOnClickListener(this);
-		bt_slam.setOnClickListener(this);
 		bt_result.setOnClickListener(this);
 		tv_auto = new AutoCompleteTextView(this);
 		Log.d("MainActivity", "Frame numbers: " + frameNum + " Peek threshold: " + peek_threshold);
@@ -139,10 +140,6 @@ public class MainActivity extends Activity implements OnClickListener {
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		int id = item.getItemId();
 		switch (id) {
-		case R.id.web_camera:
-			Intent intent = new Intent(MainActivity.this, WebCameraActivity.class);
-			startActivity(intent);
-			break;
 		case R.id.pixel_1:
 			setPixel(320, 240);
 			item.setChecked(true);
@@ -184,6 +181,16 @@ public class MainActivity extends Activity implements OnClickListener {
 			Toast.makeText(this, "Video Mode", Toast.LENGTH_SHORT).show();
 			Log.d("Capture Mode", "Video Mode");
 			break;
+		case R.id.sfm:
+			reconstruct_mode = SFM_MODE;
+			item.setChecked(true);
+			Toast.makeText(this, "SFM mode", Toast.LENGTH_SHORT).show();
+			break;
+		case R.id.slam:
+			reconstruct_mode = SLAM_MODE;
+			item.setChecked(true);
+			Toast.makeText(this, "SLAM mode", Toast.LENGTH_SHORT).show();
+			break;
 		case R.id.isAutoUpload:
 			new AlertDialog.Builder(this)
 			.setTitle("Please choose whether auto upload?")
@@ -217,6 +224,7 @@ public class MainActivity extends Activity implements OnClickListener {
 								int which) {
 							File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"/"+"MCCam");
 							deleteFile(file);
+							tv_message.setText("");
 							Toast.makeText(MainActivity.this, "Clear complete!", Toast.LENGTH_SHORT).show();
 						}
 					})
@@ -303,8 +311,8 @@ public class MainActivity extends Activity implements OnClickListener {
 			
 			@Override
 			public void onClick(DialogInterface dialog, int which) {
-				upload_url = et_num.getText().toString();
-				Log.d("upload url", "Upload Url: " + upload_url);
+				serverIp = et_num.getText().toString();
+				Log.d("upload url", "Upload Url: " + serverIp);
 			}
 		}).setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
 			
@@ -322,12 +330,17 @@ public class MainActivity extends Activity implements OnClickListener {
 	public void onClick(View v) {
 		switch(v.getId()) {
 		case R.id.bt_capture:
-			if(capture_mode == 0){
-				Intent cameraIntent = new Intent(MainActivity.this, CameraActivity.class);
-				startActivity(cameraIntent);
+			if(reconstruct_mode == SFM_MODE){
+				if(capture_mode == 0){
+					Intent cameraIntent = new Intent(MainActivity.this, CameraActivity.class);
+					startActivity(cameraIntent);
+				}else {
+					Intent videoIntent = new Intent(MainActivity.this, VideoActivity.class);
+					startActivity(videoIntent);
+				}
 			}else{
-				Intent videoIntent = new Intent(MainActivity.this, VideoActivity.class);
-				startActivity(videoIntent);
+				Intent intent = new Intent(MainActivity.this, WebCameraActivity.class);
+				startActivity(intent);
 			}
 			break;		
 		case R.id.bt_upload:
@@ -335,8 +348,8 @@ public class MainActivity extends Activity implements OnClickListener {
 				bt_upload.setEnabled(false);
 				if(mediaStorageDir.exists()) {
 					if (mediaStorageDir.list().length > 0) {
-						updateServerAddr(upload_url);
-						Log.d("InputAddress", upload_url);
+						updateServerAddr(serverIp);
+						Log.d("serverIp", serverIp);
 						picImage();
 						break;
 					}
@@ -349,22 +362,23 @@ public class MainActivity extends Activity implements OnClickListener {
 			}
 			break;
 		case R.id.bt_sfm:
-//			if(uploadFlag){
-				uploadFlag = false;
-				bt_sfm.setEnabled(false);
-				TimeStatistics.reconstructStartTime = System.currentTimeMillis();
-				CpuStatistics.reconstrct_totalCpuTime1 = getTotalCpuTime();
-				CpuStatistics.reconstrct_processCpuTime1 = getAppCpuTime();
-//				Log.d(TAG, "reconstruct start time: " + TimeStatistics.reconstructStartTime);
-				new MyHttpClientTask().execute(sfm_url + peek_threshold,
-						server_url_log);
-//			}else{
-//				Toast.makeText(this, "Nothing to reconstruct", Toast.LENGTH_SHORT).show();
-//			}
-//			InputPeakThreshold();
-			break;
-		case R.id.bt_slam:
-			new MyHttpClientTask().execute(slam_url, server_url_log);
+			if(reconstruct_mode == SFM_MODE){
+//				if(uploadFlag){
+					uploadFlag = false;
+					bt_sfm.setEnabled(false);
+					TimeStatistics.reconstructStartTime = System.currentTimeMillis();
+					CpuStatistics.reconstrct_totalCpuTime1 = getTotalCpuTime();
+					CpuStatistics.reconstrct_processCpuTime1 = getAppCpuTime();
+//					Log.d(TAG, "reconstruct start time: " + TimeStatistics.reconstructStartTime);
+					new MyHttpClientTask().execute(sfm_url + peek_threshold,
+							server_url_log);
+//				}else{
+//					Toast.makeText(this, "Nothing to reconstruct", Toast.LENGTH_SHORT).show();
+//				}
+//				InputPeakThreshold();
+			}else{
+				new MyHttpClientTask().execute(slam_url, server_url_log);
+			}
 			break;
 		case R.id.bt_result:
 			new AlertDialog.Builder(this)
@@ -393,8 +407,8 @@ public class MainActivity extends Activity implements OnClickListener {
 	}
 	
 	private void startPointCloudViewer(String filePath) {
-		saveTimeToSDcard();
-		saveCPUToSDcard();
+		saveTimeToSDcard(DOWNLOAD);
+		saveCPUToSDcard(DOWNLOAD);
 		Intent intent = new Intent(Intent.ACTION_MAIN);
 		intent.addCategory(Intent.CATEGORY_LAUNCHER);            
 		ComponentName cn = new ComponentName(packageName, className);            
@@ -429,11 +443,15 @@ public class MainActivity extends Activity implements OnClickListener {
 	private void updateServerAddr(String ip) {
 		if (!ip.equals("")){
 			sfm_upload = "http://" + ip + "/save_file.php";
+			slam_upload = "http://" + ip + "/save_file_slam.php";
 			sfm_url = "http://" + ip + "/reconstruction.php?peak_threshold=";
+			slam_url = "http://" + ip + "/reconstruction_slam.php?peak_threshold=123456";
 			server_url_log = "http://" + ip + "/loglog.php";
 		} else {
 			sfm_upload = "http://10.105.32.59/save_file.php";
+			slam_upload = "http://10.105.32.59/save_file_slam.php";
 			sfm_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
+			slam_url = "http://10.105.32.59/reconstruction_slam.php?peak_threshold=123456";
 			server_url_log = "http://10.105.32.59/loglog.php";
 		}
 		
@@ -492,7 +510,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	       return appCpuTime;
 	   }
 	
-	private void saveTimeToSDcard(){
+	private void saveTimeToSDcard(int saveType){
 		String filename = "time_statistics.txt";
 		
 		String filepath = statisticPath + File.separator + filename;
@@ -504,10 +522,24 @@ public class MainActivity extends Activity implements OnClickListener {
 				e.printStackTrace();
 			}
 		}
-		long uploadTime = TimeStatistics.uploadCompleteTime - TimeStatistics.uploadStartTime;
-		long downloadTime = TimeStatistics.downloadCompleteTime - TimeStatistics.downloadStartTime;
-		long reconstructTime = TimeStatistics.reconstructCompleteTime - TimeStatistics.reconstructStartTime;
-		String s = uploadTime + "\t" + reconstructTime + "\t" + downloadTime + "\t";
+		
+		String s = "";
+		
+		switch (saveType) {
+			case UPLOAD:
+				long uploadTime = TimeStatistics.uploadCompleteTime - TimeStatistics.uploadStartTime;
+				s = "upload_time: " + "\t" + uploadTime + "\t";
+				break;
+			case RECONSTRUCTION:
+				long reconstructTime = TimeStatistics.reconstructCompleteTime - TimeStatistics.reconstructStartTime;
+				s = "reconstruct_time: " + "\t" + reconstructTime + "\t";
+				break;
+			case DOWNLOAD:
+				long downloadTime = TimeStatistics.downloadCompleteTime - TimeStatistics.downloadStartTime;
+				s = "download_time: " + "\t" + downloadTime + "\t";
+				break;
+		}
+		
 		try {
 //			FileOutputStream fos = MainActivity.this.openFileOutput(filename, Context.MODE_APPEND);
 			FileOutputStream fos = new FileOutputStream(file, true);
@@ -521,7 +553,7 @@ public class MainActivity extends Activity implements OnClickListener {
 		}
 	}
 	
-	private void saveCPUToSDcard(){
+	private void saveCPUToSDcard(int saveType){
 		String filename = "cpu_statistics.txt";
 		
 		String filepath = statisticPath + File.separator + filename;
@@ -533,13 +565,27 @@ public class MainActivity extends Activity implements OnClickListener {
 				e.printStackTrace();
 			}
 		}
-		float uploadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
-								CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
-		float reconstructCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
-								CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
-		float downloadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
-								CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
-		String s = uploadCPU + "%\t" + reconstructCPU + "%\t" + downloadCPU + "%\t";
+		
+		String s = "";
+		
+		switch (saveType) {
+			case UPLOAD:
+				float uploadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
+						CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);	
+				s = "upload_cpu: " + "\t" + uploadCPU + "%\t";
+				break;
+			case RECONSTRUCTION:
+				float reconstructCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
+						CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);
+				s = "reconstruct_cpu: " + "\t" + reconstructCPU + "%\t";
+				break;
+			case DOWNLOAD:
+				float downloadCPU = getProcessCpuRate(CpuStatistics.upload_totalCpuTime1, CpuStatistics.upload_processCpuTime1, 
+						CpuStatistics.upload_totalCpuTime2, CpuStatistics.upload_processCpuTime2);
+				s = "download_cpu: " + "\t" + downloadCPU + "%\t";
+				break;
+		}
+		
 		Log.d(TAG, "cpu statistics: " + s);
 		
 		try {
@@ -580,7 +626,11 @@ public class MainActivity extends Activity implements OnClickListener {
 					CpuStatistics.upload_totalCpuTime1 = getTotalCpuTime();
 					CpuStatistics.upload_processCpuTime1 = getAppCpuTime();
 //					Log.d(TAG, "upload start time: " + TimeStatistics.uploadStartTime);
-					new MyUploadHelper(sfm_upload).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
+					if(reconstruct_mode == SFM_MODE){
+						new MyUploadHelper(sfm_upload).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
+					}else{
+						new MyUploadHelper(slam_upload).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, files);
+					}
 					break;
 				}
 			} 
@@ -634,8 +684,10 @@ public class MainActivity extends Activity implements OnClickListener {
 			TimeStatistics.uploadCompleteTime = System.currentTimeMillis();
 			CpuStatistics.upload_totalCpuTime2 = getTotalCpuTime();
 			CpuStatistics.upload_processCpuTime2 = getAppCpuTime();
+			saveTimeToSDcard(UPLOAD);
+			saveCPUToSDcard(UPLOAD);
 //			Log.d(TAG, "upload complete time: " + TimeStatistics.uploadCompleteTime);
-			uploadFlag = true;
+//			uploadFlag = true;
 			progressBar.setVisibility(ProgressBar.GONE);
 			progressBar.setProgress(0);
 		}
@@ -653,6 +705,8 @@ public class MainActivity extends Activity implements OnClickListener {
 			TimeStatistics.reconstructCompleteTime = System.currentTimeMillis();
 			CpuStatistics.reconstrct_totalCpuTime2 = getTotalCpuTime();
 			CpuStatistics.reconstrct_processCpuTime2 = getAppCpuTime();
+			saveTimeToSDcard(RECONSTRUCTION);
+			saveCPUToSDcard(RECONSTRUCTION);
 //			Log.d(TAG, "reconstruct complete time: " + TimeStatistics.reconstructCompleteTime);
 			Toast.makeText(getApplicationContext(), "finished reconstruction", Toast.LENGTH_LONG).show();	
 		}

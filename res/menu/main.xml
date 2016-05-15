@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
+     <item android:id="@+id/reconstruct_mode"
+      android:title="Reconstruct Mode">
+        <menu >
+            <group android:checkableBehavior="single">
+               <item android:id="@+id/sfm" android:title="SFM"  android:checked="true"></item>
+               <item android:id="@+id/slam" android:title="SLAM"></item>
+            </group>
+        </menu>
+    </item>
     <item android:id="@+id/capture_mode"
       android:title="Capture Mode">
         <menu >
@@ -20,7 +29,6 @@
             </group>
         </menu>
 	</item>
-   <item android:id="@+id/web_camera" android:title="Web Camera"/>
     <item android:id="@+id/frame_lifting"
         android:title="Frame Lifting"/>
     <item android:id="@+id/peek_threshold"
