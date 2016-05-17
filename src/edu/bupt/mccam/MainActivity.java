@@ -62,7 +62,7 @@ public class MainActivity extends Activity implements OnClickListener {
 	private static String slam_url = "http://10.105.32.59/reconstruction_slam.php?peak_threshold=123456";
 	private String server_url_log = "http://10.105.32.59/loglog.php";
 	private String sfm_download = "http://10.105.32.59/result/option-0000.ply.csv";
-	private String slam_download = "http://10.105.32.59/result_slam/pc.ply";
+	private String slam_download = "http://10.105.32.59/result_slam/pc.ply.csv";
 
 	private static File mediaStorageDir = new File(Environment.getExternalStoragePublicDirectory(
 			Environment.DIRECTORY_PICTURES), "MCCam");
@@ -453,7 +453,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			sfm_url = "http://" + ip + "/reconstruction.php?peak_threshold=";
 			slam_url = "http://" + ip + "/reconstruction_slam.php?peak_threshold=123456";
 			sfm_download = "http://" + ip + "/result/option-0000.ply.csv";
-			slam_download = "http://" + ip + "/result_slam/pc.ply";
+			slam_download = "http://" + ip + "/result_slam/pc.ply.csv";
 			server_url_log = "http://" + ip + "/loglog.php";
 		} else {
 			sfm_upload = "http://10.105.32.59/save_file.php";
@@ -461,7 +461,7 @@ public class MainActivity extends Activity implements OnClickListener {
 			sfm_url = "http://10.105.32.59/reconstruction.php?peak_threshold=";
 			slam_url = "http://10.105.32.59/reconstruction_slam.php?peak_threshold=123456";
 			sfm_download = "http://10.105.32.59/result/option-0000.ply.csv";
-			slam_download = "http://10.105.32.59/result_slam/pc.ply";
+			slam_download = "http://10.105.32.59/result_slam/pc.ply.csv";
 			server_url_log = "http://10.105.32.59/loglog.php";
 		}
 		
